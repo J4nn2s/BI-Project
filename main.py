@@ -1,0 +1,11 @@
+if __name__ == "__main__":
+    print("        ____")
+    print("       /    \\")
+    print("      |      |")
+    print("      |      |")
+    print("      |      |")
+    print("      |      |")
+    print("     /        \\")
+    print(" ___|          |___")
+    print("|                  |")
+    print(" \\________________/")
