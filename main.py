@@ -1,8 +1,12 @@
-import os
-import pandas as pd
-if __name__ == "__main__":
-    parent_directory = os.path.dirname(os.getcwd())
+from lib.data_prep import load_data
 
-    file_path = os.path.join(parent_directory, "Crimes_2012-2016.csv")
-    data = pd.read_csv(file_path, sep=",")
+import pandas as pd
+
+if __name__ == "__main__":
+    print("Load Data ...")
+    data: pd.DataFrame = load_data()
+
+    print("Data loaded: First Information About the Dataframe")
+
     print(data.info())
+    print(data.head())
