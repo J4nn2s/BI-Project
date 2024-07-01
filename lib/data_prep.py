@@ -18,15 +18,38 @@ def load_data() -> pd.DataFrame:
 
 
 def format_data_frame(data: pd.DataFrame) -> pd.DataFrame:
-    data['DATE.OCC.Year'] = data['DATE.OCC'].dt.year
-    data['DATE.OCC.Month'] = data['DATE.OCC'].dt.month
-    data['DATE.OCC.Day'] = data['DATE.OCC'].dt.day
+    data['DATE.OCC.Year'] = data['DATE.OCC'].dt.year.astype(int)
+    data['DATE.OCC.Month'] = data['DATE.OCC'].dt.month.astype(int)
+    data['DATE.OCC.Day'] = data['DATE.OCC'].dt.day.astype(int)
+
+    # Stellen sicher, dass es vierstellig ist
+    data['TIME_CATEGORY'] = data['TIME.OCC'].apply(
+        lambda x: str(x).zfill(4)[:2])
 
     data[['Latitude', 'Longitude']] = data['Location.1'].str.extract(
         r'\(([^,]+), ([^)]+)\)').astype(float)
-    print(data.describe())
+    data['SEASON'] = data['DATE.OCC.Month'].apply(get_season)
+    data['WEEKDAY'] = data['DATE.OCC'].dt.day_name()
     return data
 
+
+def get_season(month: int) -> str:
+    if month in [12, 1, 2]:
+        return 'Winter'
+    elif month in [3, 4, 5]:
+        return 'Frühling'
+    elif month in [6, 7, 8]:
+        return 'Sommer'
+    else:
+        return 'Herbst'
+
+
+# def categorize_time(hour: int) -> str:
+#     # Zeit als vierstellige Zeichenkette formatieren
+#     hour_str = str(hour).zfill(4)
+#     # Die ersten beiden Ziffern der Zeit extrahieren
+#     first_two_digits = hour_str[:2]
+#     return first_two_digits
 
 if __name__ == "__main__":
 
