@@ -5,10 +5,11 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.preprocessing import StandardScaler
 from loguru import logger
-from lib.data_prep import load_data, format_data_frame
+from lib.data_prep import *
 import random
 from sklearn.model_selection import train_test_split, GridSearchCV, StratifiedKFold
 from lib.tune_random_forest import grid_tune_hyperparameters, randomize_tune_hyperparameters
+import gc
 
 RANDOM_SEED = random.randint(1, 10)  # können wir final setten zum Schluss
 # RANDOM_SEED = 42
@@ -18,11 +19,16 @@ if __name__ == "__main__":
     print(data.head())
     print(data.info())
 
-    data_sample = data.sample(n=500000, random_state=RANDOM_SEED)
+    data_sample = data.sample(n=1000000, random_state=RANDOM_SEED)
     data_sample = format_data_frame(data_sample)
+    data_sample = remove_outside_la(data_sample)
+    del data
+    gc.collect()
 
-    features = data_sample[['AREA', 'TIME_CATEGORY',
-                            'Latitude', 'Longitude', 'SEASON']]
+    features: pd.DataFrame = data_sample[['AREA', 'TIME_CATEGORY',
+                                          'Latitude', 'Longitude']]
+    features = optimize_data_types(features)
+
     target = data_sample['Crm.Cd']
 
     scaler = StandardScaler()
@@ -32,10 +38,8 @@ if __name__ == "__main__":
     features.loc[:, ['Latitude', 'Longitude']] = scaled_features
 
     # Durchführung von One-Hot-Encoding oder anderer kategorialer Kodierung
-    features = pd.get_dummies(features, columns=['TIME_CATEGORY'])
+    # features = pd.get_dummies(features, columns=['TIME_CATEGORY'])
     features = pd.get_dummies(features, columns=['AREA'])
-
-    features = pd.get_dummies(features, columns=['SEASON'])
 
     logger.info('---------------------------------------------')
     logger.info("Data-Preparation finished ...")
@@ -44,7 +48,10 @@ if __name__ == "__main__":
     logger.info(features.head())
 
     X_train, X_test, y_train, y_test = train_test_split(
-        features, target, test_size=0.2, random_state=RANDOM_SEED)
+        features, target, test_size=0.4, random_state=RANDOM_SEED)
+
+    del data_sample, target
+    gc.collect()
 
     logger.info('---------------------------------------------')
     logger.info("Training the model ...")
@@ -95,18 +102,17 @@ if __name__ == "__main__":
 
     # vorher cv gemacht und wir verwenden einfach die Ergebnisse davon
 
-    best_params = {
-        'max_leaf_nodes': 110,
-        'n_estimators': 50,
-    }
     # Modell mit den besten Parametern initialisieren
     best_model = RandomForestClassifier(
-        **best_params, random_state=RANDOM_SEED, n_jobs=-1)
+        n_estimators=100, max_leaf_nodes=200, random_state=RANDOM_SEED, n_jobs=-1, verbose=2)
 
     #######################################################
 
     # Modell trainieren
     best_model.fit(X_train, y_train)
+
+    del X_train, y_train
+    gc.collect()
 
     # Modellbewertung
     test_score = best_model.score(X_test, y_test)

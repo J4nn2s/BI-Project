@@ -7,6 +7,8 @@ import matplotlib.dates as mdates
 import os
 from loguru import logger
 from tabulate import tabulate
+import geopandas as gpd
+from shapely.geometry import Point
 
 
 def create_time_series_plot(df: pd.DataFrame, display: bool = True) -> None:
@@ -58,6 +60,44 @@ def create_time_series_plot(df: pd.DataFrame, display: bool = True) -> None:
 
     except Exception as e:
         logger.info(f"An error occurred: {e}")
+
+# to do Recherche Datenpunkte sauber plotten
+
+
+def show_coordinates(df: pd.DataFrame) -> None:
+    df = df.dropna(subset=['Latitude', 'Longitude'])
+
+    gdf = gpd.GeoDataFrame(
+        df, geometry=gpd.points_from_xy(df.Longitude, df.Latitude))
+
+    # Los Angeles Koordinaten für Mittelpunkt
+    la_center = Point(-118.2437, 34.0522)
+
+    # Karte plotten
+    fig, ax = plt.subplots(figsize=(10, 10))
+    world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+
+    # Weltkarte plotten
+    world.boundary.plot(ax=ax, linewidth=1)
+    gdf.plot(ax=ax, color='red', markersize=5)
+
+    # Mittelpunkt und Zoom auf Los Angeles
+    ax.set_xlim([la_center.x - 0.5, la_center.x + 0.5])
+    ax.set_ylim([la_center.y - 0.5, la_center.y + 0.5])
+    plt.title('Latitude and Longitude Points in Los Angeles')
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+
+    # Erstelle den Pfad zum Speichern des Plots
+    plot_directory = 'Plots'
+    if not os.path.exists(plot_directory):
+        os.makedirs(plot_directory)
+    file_path = os.path.join(plot_directory, 'la_map.png')
+
+    # Plot als PNG-Datei speichern
+    plt.savefig(file_path, dpi=300, bbox_inches='tight')
+
+    print(f"Karte wurde als '{file_path}' gespeichert.")
 
 
 def plot_area_code_frequencies(df: pd.DataFrame) -> None:
@@ -169,6 +209,7 @@ def counting_missing_values(data: pd.DataFrame) -> int:
 def counting_missing_values_column(data: pd.DataFrame) -> list[int]:
     return data.isnull().sum()
 
+
 def count_outside_la(data: pd.DataFrame) -> int:
     lat_min, lat_max = 33.0, 36.0
     long_min, long_max = -120.0, -116.0
@@ -178,6 +219,7 @@ def count_outside_la(data: pd.DataFrame) -> int:
 
     # Berechnen der Anzahl der Zeilen, die nicht in LA sind
     return len(data_not_in_la)
+
 
 if __name__ == "__main__":
 
@@ -210,7 +252,8 @@ if __name__ == "__main__":
 
     logger.info("Looking into the distribution of the variables")
 
-    data[['Latitude', 'Longitude']] = data['Location.1'].str.extract(r'\(([^,]+),\s*([^\)]+)\)')
+    data[['Latitude', 'Longitude']] = data['Location.1'].str.extract(
+        r'\(([^,]+),\s*([^\)]+)\)')
     # Konvertiere die neuen Spalten in numerische Werte
     data['Latitude'] = pd.to_numeric(data['Latitude'])
     data['Longitude'] = pd.to_numeric(data['Longitude'])
@@ -220,15 +263,19 @@ if __name__ == "__main__":
 
     logger.info("Checking whether Coordinates are correct")
     logger.info(f" Count of data outside of LA: {count_outside_la(data)}")
-    ########################### THE PLOTS ##########################
-
-    # create_time_series_plot(data)
-    # plot_area_code_frequencies(data)
-    # histogram_time(data)
-    # plot_top10_crimes(data)
     logger.info(get_count_of_crimes(data))
     num_unique_areas = data['AREA'].nunique()
     logger.info(f"Count of different 'AREA': {num_unique_areas}")
     logger.info(f"Count per 'AREA': {get_count_of_areas(data)}")
     num_unique_crime_categories = data["Crm.Cd"].nunique()
     logger.info(f"Count of different 'Crm.Cd': {num_unique_crime_categories}")
+    num_unique_street = data['Cross.Street'].nunique()
+    logger.info(f"Count of different 'street': {num_unique_street}")
+
+    ########################### THE PLOTS ##########################
+
+    # create_time_series_plot(data)
+    # plot_area_code_frequencies(data)
+    # histogram_time(data)
+    # plot_top10_crimes(data)
+    show_coordinates(data)

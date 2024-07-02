@@ -24,7 +24,7 @@ def format_data_frame(data: pd.DataFrame) -> pd.DataFrame:
 
     # Stellen sicher, dass es vierstellig ist
     data['TIME_CATEGORY'] = data['TIME.OCC'].apply(
-        lambda x: str(x).zfill(4)[:2])
+        lambda x: str(x).zfill(4)[:2]).astype(int)
 
     data[['Latitude', 'Longitude']] = data['Location.1'].str.extract(
         r'\(([^,]+), ([^)]+)\)').astype(float)
@@ -50,6 +50,29 @@ def get_season(month: int) -> str:
 #     # Die ersten beiden Ziffern der Zeit extrahieren
 #     first_two_digits = hour_str[:2]
 #     return first_two_digits
+
+def remove_outside_la(data: pd.DataFrame) -> pd.DataFrame:
+    lat_min, lat_max = 33.0, 36.0
+    long_min, long_max = -120.0, -116.0
+
+    # Filtere die Zeilen, die innerhalb des Bereichs liegen
+    data_in_la = data[(data['Latitude'] >= lat_min) & (data['Latitude'] <= lat_max) &
+                      (data['Longitude'] >= long_min) & (data['Longitude'] <= long_max)]
+
+    # Rückgabe des DataFrame, der nur Einträge innerhalb des angegebenen Bereichs enthält
+    return data_in_la
+
+
+def optimize_data_types(df: pd.DataFrame) -> pd.DataFrame:
+    for col in df.columns:
+        col_type = df[col].dtype
+        if col_type != object:
+            if col_type in ['int64', 'int32']:
+                df[col] = pd.to_numeric(df[col], downcast='integer')
+            elif col_type in ['float64', 'float32']:
+                df[col] = pd.to_numeric(df[col], downcast='float')
+    return df
+
 
 if __name__ == "__main__":
 
