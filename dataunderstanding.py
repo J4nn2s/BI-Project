@@ -6,9 +6,9 @@ from matplotlib.dates import DateFormatter
 import matplotlib.dates as mdates
 import os
 from loguru import logger
-from tabulate import tabulate
 import geopandas as gpd
 from shapely.geometry import Point
+from tabulate import tabulate
 
 
 def create_time_series_plot(df: pd.DataFrame, display: bool = True) -> None:

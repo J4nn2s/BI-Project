@@ -14,8 +14,12 @@ def load_data() -> pd.DataFrame:
         with zip_ref.open(csv_file_name) as csv_file:
             # BytesIO wird verwendet, um die Datei im Speicher zu halten
             data = BytesIO(csv_file.read())
-            return pd.read_csv(data, sep=",", parse_dates=["Date.Rptd", "DATE.OCC"])
+            df =  pd.read_csv(data, sep=",", parse_dates=["Date.Rptd", "DATE.OCC"])
 
+            df = df.drop_duplicates()
+            return df
+
+   
 
 def format_data_frame(data: pd.DataFrame) -> pd.DataFrame:
     data['DATE.OCC.Year'] = data['DATE.OCC'].dt.year.astype(int)
