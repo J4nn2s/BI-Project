@@ -11,6 +11,97 @@ from shapely.geometry import Point
 from tabulate import tabulate
 
 
+def detailed_yearly_comparison(df: pd.DataFrame, year: int) -> None:
+    df['Date.Rptd'] = pd.to_datetime(df['Date.Rptd'])
+    df['Year'] = df['Date.Rptd'].dt.year
+
+    # Filter data for the specified year and the previous year
+    year_data = df[df['Year'] == year]
+    prev_year_data = df[df['Year'] == year - 1]
+
+    monthly_counts_year = year_data.groupby(
+        year_data['Date.Rptd'].dt.month).size()
+    monthly_counts_prev_year = prev_year_data.groupby(
+        prev_year_data['Date.Rptd'].dt.month).size()
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(monthly_counts_year.index, monthly_counts_year.values,
+             marker='o', label=f'{year}')
+    plt.plot(monthly_counts_prev_year.index,
+             monthly_counts_prev_year.values, marker='o', label=f'{year - 1}')
+    plt.title(f'Crime Comparison: {year} vs {year - 1}')
+    plt.xlabel('Month')
+    plt.ylabel('Number of Crimes')
+    plt.legend()
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    os.makedirs('Plots', exist_ok=True)
+    plt.savefig(f'Plots/yearly_comparison_{year}.png')
+    plt.show()
+
+
+def plot_long_term_trends(df: pd.DataFrame) -> None:
+    if 'Date.Rptd' not in df.columns:
+        logger.error("Column 'Date.Rptd' not found in DataFrame")
+        return
+
+    if df['Date.Rptd'].isnull().all():
+        logger.error("'Date.Rptd' column contains all null values")
+        return
+
+    try:
+        df['Date.Rptd'] = pd.to_datetime(df['Date.Rptd'])
+        df['Year'] = df['Date.Rptd'].dt.year
+        yearly_counts = df.groupby('Year').size()
+
+        if yearly_counts.empty:
+            logger.warning("Yearly counts are empty")
+            return
+
+        plt.figure(figsize=(12, 6))
+        sns.lineplot(x=yearly_counts.index, y=yearly_counts.values, marker='o')
+        plt.title('Yearly Trends of Crimes')
+        plt.xlabel('Year')
+        plt.ylabel('Number of Crimes')
+        plt.grid(True, linestyle='--', alpha=0.7)
+        plt.tight_layout()
+        os.makedirs('Plots', exist_ok=True)
+        plt.savefig('Plots/yearly_trends.png')
+        logger.info("Yearly trends saved as 'Plots/yearly_trends.png'")
+        plt.show()
+
+    except Exception as e:
+        logger.error(f"An error occurred while plotting long term trends: {e}")
+
+
+def plot_seasonal_analysis(df: pd.DataFrame) -> None:
+    df['Month'] = df['Date.Rptd'].dt.month
+    df['DayOfWeek'] = df['Date.Rptd'].dt.dayofweek
+
+    monthly_counts = df.groupby('Month').size()
+    weekly_counts = df.groupby('DayOfWeek').size()
+
+    fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+
+    sns.barplot(x=monthly_counts.index, y=monthly_counts.values,
+                ax=axes[0], palette='deep')
+    axes[0].set_title('Crimes per Month')
+    axes[0].set_xlabel('Month')
+    axes[0].set_ylabel('Number of Crimes')
+
+    sns.barplot(x=weekly_counts.index, y=weekly_counts.values,
+                ax=axes[1], palette='deep')
+    axes[1].set_title('Crimes per Day of the Week')
+    axes[1].set_xlabel('Day of the Week')
+    axes[1].set_ylabel('Number of Crimes')
+    axes[1].set_xticklabels(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
+
+    plt.tight_layout()
+    os.makedirs('Plots', exist_ok=True)
+    plt.savefig('Plots/seasonal_analysis.png')
+    logger.info("Seasonal analysis saved as 'Plots/seasonal_analysis.png'")
+
+
 def create_time_series_plot(df: pd.DataFrame, display: bool = True) -> None:
     if df.empty:
         logger.info("DataFrame is empty.")
@@ -64,7 +155,7 @@ def create_time_series_plot(df: pd.DataFrame, display: bool = True) -> None:
 # to do Recherche Datenpunkte sauber plotten
 
 
-def show_coordinates(df: pd.DataFrame) -> None:
+# def show_coordinates(df: pd.DataFrame) -> None:
     df = df.dropna(subset=['Latitude', 'Longitude'])
 
     gdf = gpd.GeoDataFrame(
@@ -278,4 +369,7 @@ if __name__ == "__main__":
     # plot_area_code_frequencies(data)
     # histogram_time(data)
     # plot_top10_crimes(data)
-    show_coordinates(data)
+    # show_coordinates(data)
+    # plot_seasonal_analysis(data)
+    # plot_long_term_trends(data)
+    # detailed_yearly_comparison(data, 2016)
