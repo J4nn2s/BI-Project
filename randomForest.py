@@ -11,21 +11,21 @@ from sklearn.model_selection import train_test_split, GridSearchCV, StratifiedKF
 from lib.tune_random_forest import grid_tune_hyperparameters, randomize_tune_hyperparameters
 import gc
 
-RANDOM_SEED = random.randint(1, 10)  # können wir final setten zum Schluss
-# RANDOM_SEED = 42
+# RANDOM_SEED = random.randint(1, 10)  # können wir final setten zum Schluss
+RANDOM_SEED = 41
 if __name__ == "__main__":
     data = load_data()
 
     print(data.head())
     print(data.info())
 
-    data_sample = data.sample(n=1000000, random_state=RANDOM_SEED)
+    data_sample = data.sample(n=600000, random_state=RANDOM_SEED)
     data_sample = format_data_frame(data_sample)
     data_sample = remove_outside_la(data_sample)
     del data
     gc.collect()
 
-    features: pd.DataFrame = data_sample[['AREA', 'TIME_CATEGORY',
+    features: pd.DataFrame = data_sample[['AREA', 'TIME.OCC',
                                           'Latitude', 'Longitude']]
     features = optimize_data_types(features)
 
@@ -37,8 +37,6 @@ if __name__ == "__main__":
 
     features.loc[:, ['Latitude', 'Longitude']] = scaled_features
 
-    # Durchführung von One-Hot-Encoding oder anderer kategorialer Kodierung
-    # features = pd.get_dummies(features, columns=['TIME_CATEGORY'])
     features = pd.get_dummies(features, columns=['AREA'])
 
     logger.info('---------------------------------------------')

@@ -1,4 +1,4 @@
-from lib.data_prep import load_data
+from lib.data_prep import *
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -8,14 +8,13 @@ import os
 from loguru import logger
 import geopandas as gpd
 from shapely.geometry import Point
-from tabulate import tabulate
 
 
 def detailed_yearly_comparison(df: pd.DataFrame, year: int) -> None:
     df['Date.Rptd'] = pd.to_datetime(df['Date.Rptd'])
     df['Year'] = df['Date.Rptd'].dt.year
 
-    # Filter data for the specified year and the previous year
+    # Filter data for the specified year and the previous yearW
     year_data = df[df['Year'] == year]
     prev_year_data = df[df['Year'] == year - 1]
 
@@ -316,41 +315,38 @@ if __name__ == "__main__":
 
     logger.info("Load Data ...")
     data: pd.DataFrame = load_data()
+    for i in range(2):
+        missing: bool = checking_missing_values(data)
 
-    missing: bool = checking_missing_values(data)
-    if missing:
-        logger.warning("There are missing values inside the Dataframe")
-        total_missing_count: int = counting_missing_values(data)
-        logger.warning(
-            f"\nTotal number of missing values in the DataFrame:, {total_missing_count}")
-        missing_columns = columns_with_missing_values(data)
-        logger.warning(f"Columns with missing values:, {missing_columns}")
-        # Display a sample of rows with missing values
-        logger.info(data[data.isnull().any(axis=1)].head())
-        missing_values_count_column = counting_missing_values_column(data)
-        logger.warning(f"Missing values count by column: {
-            missing_values_count_column}")
-    else:
-        logger.info("No missing values inside the Dataframe")
+        if missing:
+            logger.warning("There are missing values inside the Dataframe")
+            total_missing_count: int = counting_missing_values(data)
+            logger.warning(
+                f"\nTotal number of missing values in the DataFrame:, {total_missing_count}")
+            missing_columns = columns_with_missing_values(data)
+            logger.warning(f"Columns with missing values:, {missing_columns}")
+            # Display a sample of rows with missing values
+            logger.info(data[data.isnull().any(axis=1)].head())
+            missing_values_count_column = counting_missing_values_column(data)
+            logger.warning(f"Missing values count by column: {
+                missing_values_count_column}")
+        else:
+            logger.info("No missing values inside the Dataframe")
+
+        data = format_data_frame(data)
+        count_invalid_latitude = data['Latitude'].value_counts().get(
+            0.0,  np.nan)
+        logger.info(f"Anzahl der Zeilen, bei denen Latitude 0.0 oder 0 ist: {
+            count_invalid_latitude}")
 
     logger.info("Data loaded: First Information About the Dataframe")
 
     logger.info("Datatypes of the Script")
     logger.info(data.info())
 
-    logger.info("Checking the first rows")
-    logger.info(data.head())
-
     logger.info("Looking into the distribution of the variables")
 
-    data[['Latitude', 'Longitude']] = data['Location.1'].str.extract(
-        r'\(([^,]+),\s*([^\)]+)\)')
-    # Konvertiere die neuen Spalten in numerische Werte
-    data['Latitude'] = pd.to_numeric(data['Latitude'])
-    data['Longitude'] = pd.to_numeric(data['Longitude'])
-
-    describe_table = data.describe().reset_index()
-    logger.info(tabulate(describe_table, headers='keys', tablefmt='pretty'))
+    logger.info(data.describe())
 
     logger.info("Checking whether Coordinates are correct")
     logger.info(f" Count of data outside of LA: {count_outside_la(data)}")
@@ -363,13 +359,13 @@ if __name__ == "__main__":
     num_unique_street = data['Cross.Street'].nunique()
     logger.info(f"Count of different 'street': {num_unique_street}")
 
-    ########################### THE PLOTS ##########################
+    ########################## THE PLOTS ##########################
 
-    # create_time_series_plot(data)
-    # plot_area_code_frequencies(data)
-    # histogram_time(data)
-    # plot_top10_crimes(data)
+    create_time_series_plot(data)
+    plot_area_code_frequencies(data)
+    histogram_time(data)
+    plot_top10_crimes(data)
     # show_coordinates(data)
-    # plot_seasonal_analysis(data)
-    # plot_long_term_trends(data)
-    # detailed_yearly_comparison(data, 2016)
+    plot_seasonal_analysis(data)
+    plot_long_term_trends(data)
+    detailed_yearly_comparison(data, 2016)

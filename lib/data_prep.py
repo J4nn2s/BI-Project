@@ -2,6 +2,8 @@ import os
 import pandas as pd
 import zipfile
 from io import BytesIO
+import numpy as np
+from loguru import logger
 
 
 def load_data() -> pd.DataFrame:
@@ -14,26 +16,49 @@ def load_data() -> pd.DataFrame:
         with zip_ref.open(csv_file_name) as csv_file:
             # BytesIO wird verwendet, um die Datei im Speicher zu halten
             data = BytesIO(csv_file.read())
-            df =  pd.read_csv(data, sep=",", parse_dates=["Date.Rptd", "DATE.OCC"])
+            df = pd.read_csv(data, sep=",", parse_dates=[
+                             "Date.Rptd", "DATE.OCC"])
 
             df = df.drop_duplicates()
             return df
 
-   
 
 def format_data_frame(data: pd.DataFrame) -> pd.DataFrame:
     data['DATE.OCC.Year'] = data['DATE.OCC'].dt.year.astype(int)
     data['DATE.OCC.Month'] = data['DATE.OCC'].dt.month.astype(int)
     data['DATE.OCC.Day'] = data['DATE.OCC'].dt.day.astype(int)
 
-    # Stellen sicher, dass es vierstellig ist
-    data['TIME_CATEGORY'] = data['TIME.OCC'].apply(
-        lambda x: str(x).zfill(4)[:2]).astype(int)
+    data[['Latitude', 'Longitude']] = data['Location.1'].str.extract(
+        r'\(([^,]+), ([^)]+)\)').astype(float)
+
+    data['SEASON'] = data['DATE.OCC.Month'].apply(get_season)
+    data['WEEKDAY'] = data['DATE.OCC'].dt.day_name()
+
+    data = clean_coordinates(data)
+    return data
+
+
+def clean_coordinates(data: pd.DataFrame) -> pd.DataFrame:
 
     data[['Latitude', 'Longitude']] = data['Location.1'].str.extract(
         r'\(([^,]+), ([^)]+)\)').astype(float)
-    data['SEASON'] = data['DATE.OCC.Month'].apply(get_season)
-    data['WEEKDAY'] = data['DATE.OCC'].dt.day_name()
+
+    invalid_coords = (data['Latitude'] == 0.0) & (data['Longitude'] == 0.0)
+    data.loc[invalid_coords, ['Latitude', 'Longitude']] = [np.nan, np.nan]
+
+    area_coords_mean: pd.DataFrame = data.groupby(
+        'AREA')[['Latitude', 'Longitude']].transform('mean')
+
+    data[['Latitude', 'Longitude']] = data[[
+        'Latitude', 'Longitude']].fillna(area_coords_mean)
+
+    invalid_coords_after = data['Latitude'].isna() | data['Longitude'].isna()
+
+    count_invalid_coords = invalid_coords_after.sum()
+    print(f"Anzahl der Zeilen, die gelöscht werden: {count_invalid_coords}")
+
+    data = data.dropna(subset=['Latitude', 'Longitude'])
+    logger.info("Cleaned the coordinates")
     return data
 
 
@@ -78,6 +103,15 @@ def optimize_data_types(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def checking_missing_coordinates(data: pd.DataFrame) -> bool:
+    # Überprüft, ob es fehlende Werte in den Spalten 'Latitude' oder 'Longitude' gibt
+    missing_latitude = data['Latitude'].isnull().any()
+    missing_longitude = data['Longitude'].isnull().any()
+
+    # Gibt True zurück, wenn es fehlende Werte in einer der beiden Spalten gibt
+    return missing_latitude or missing_longitude
+
+
 if __name__ == "__main__":
 
     import os
@@ -87,6 +121,15 @@ if __name__ == "__main__":
     print("Inhalt des übergeordneten Verzeichnisses:", os.listdir('..'))
 
     data = load_data()
+    data[['Latitude', 'Longitude']] = data['Location.1'].str.extract(
+        r'\(([^,]+), ([^)]+)\)').astype(float)
+
     print(data.head())
     print(data.info())
+    print('Fehlende Werte ?')
+    print(checking_missing_coordinates(data))
+
     format_data_frame(data)
+    print('Fehlende Werte ?')
+
+    print(checking_missing_coordinates(data))
