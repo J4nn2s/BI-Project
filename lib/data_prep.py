@@ -34,6 +34,9 @@ def format_data_frame(data: pd.DataFrame) -> pd.DataFrame:
     data['SEASON'] = data['DATE.OCC.Month'].apply(get_season)
     data['WEEKDAY'] = data['DATE.OCC'].dt.day_name()
 
+    data['Diff between OCC and Report'] = (
+        data['Date.Rptd'] - data['DATE.OCC']).dt.days
+
     data = clean_coordinates(data)
     return data
 
@@ -43,7 +46,8 @@ def clean_coordinates(data: pd.DataFrame) -> pd.DataFrame:
     data[['Latitude', 'Longitude']] = data['Location.1'].str.extract(
         r'\(([^,]+), ([^)]+)\)').astype(float)
 
-    invalid_coords = (data['Latitude'] == 0.0) & (data['Longitude'] == 0.0)
+    invalid_coords: pd.Series[bool] = (
+        data['Latitude'] == 0.0) & (data['Longitude'] == 0.0)
     data.loc[invalid_coords, ['Latitude', 'Longitude']] = [np.nan, np.nan]
 
     area_coords_mean: pd.DataFrame = data.groupby(

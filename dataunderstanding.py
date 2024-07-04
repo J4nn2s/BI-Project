@@ -356,6 +356,9 @@ if __name__ == "__main__":
     logger.info(f"Count per 'AREA': {get_count_of_areas(data)}")
     num_unique_crime_categories = data["Crm.Cd"].nunique()
     logger.info(f"Count of different 'Crm.Cd': {num_unique_crime_categories}")
+    num_unique_crime_describtions = data["Crm.Desc"].nunique()
+    logger.info(f"Count of different describtions for crime 'Crm.Desc': {
+                num_unique_crime_categories}")
     num_unique_street = data['Cross.Street'].nunique()
     logger.info(f"Count of different 'street': {num_unique_street}")
 

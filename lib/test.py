@@ -20,5 +20,4 @@ area_coords_mean: pd.DataFrame = data.groupby(
 data[['Latitude', 'Longitude']] = data[[
     'Latitude', 'Longitude']].fillna(area_coords_mean)
 
-
 print(data)

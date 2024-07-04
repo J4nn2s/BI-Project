@@ -19,14 +19,22 @@ if __name__ == "__main__":
     print(data.head())
     print(data.info())
 
-    data_sample = data.sample(n=600000, random_state=RANDOM_SEED)
+    data_sample = data.sample(n=200000, random_state=RANDOM_SEED)
     data_sample = format_data_frame(data_sample)
     data_sample = remove_outside_la(data_sample)
+
     del data
     gc.collect()
 
-    features: pd.DataFrame = data_sample[['AREA', 'TIME.OCC',
-                                          'Latitude', 'Longitude']]
+    features: pd.DataFrame = data_sample[['AREA',
+                                          'TIME.OCC',
+                                          'Latitude',
+                                          'Longitude',
+                                          'SEASON',
+                                          'WEEKDAY',
+                                          'DATE.OCC.Year',
+                                          'Diff between OCC and Report']]
+
     features = optimize_data_types(features)
 
     target = data_sample['Crm.Cd']
@@ -38,6 +46,9 @@ if __name__ == "__main__":
     features.loc[:, ['Latitude', 'Longitude']] = scaled_features
 
     features = pd.get_dummies(features, columns=['AREA'])
+    features = pd.get_dummies(features, columns=['SEASON'])
+    features = pd.get_dummies(features, columns=['DATE.OCC.Year'])
+    features = pd.get_dummies(features, columns=['WEEKDAY'])
 
     logger.info('---------------------------------------------')
     logger.info("Data-Preparation finished ...")
