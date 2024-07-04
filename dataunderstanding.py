@@ -356,19 +356,19 @@ if __name__ == "__main__":
     logger.info(f"Count per 'AREA': {get_count_of_areas(data)}")
     num_unique_crime_categories = data["Crm.Cd"].nunique()
     logger.info(f"Count of different 'Crm.Cd': {num_unique_crime_categories}")
-    num_unique_crime_describtions = data["Crm.Desc"].nunique()
-    logger.info(f"Count of different describtions for crime 'Crm.Desc': {
+    num_unique_crime_describtions = data["CrmCd.Desc"].nunique()
+    logger.info(f"Count of different describtions for crime 'CrmCd.Desc': {
                 num_unique_crime_categories}")
     num_unique_street = data['Cross.Street'].nunique()
     logger.info(f"Count of different 'street': {num_unique_street}")
 
-    ########################## THE PLOTS ##########################
+    # THE PLOTS ##########################W
 
-    create_time_series_plot(data)
-    plot_area_code_frequencies(data)
-    histogram_time(data)
-    plot_top10_crimes(data)
-    # show_coordinates(data)
-    plot_seasonal_analysis(data)
-    plot_long_term_trends(data)
-    detailed_yearly_comparison(data, 2016)
+    # create_time_series_plot(data)
+    # plot_area_code_frequencies(data)
+    # histogram_time(data)
+    # plot_top10_crimes(data)
+    # # show_coordinates(data)
+    # plot_seasonal_analysis(data)
+    # plot_long_term_trends(data)
+    # detailed_yearly_comparison(data, 2016)

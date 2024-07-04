@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.preprocessing import StandardScaler
 from loguru import logger
@@ -114,8 +114,8 @@ if __name__ == "__main__":
     # vorher cv gemacht und wir verwenden einfach die Ergebnisse davon
 
     # Modell mit den besten Parametern initialisieren
-    best_model = RandomForestClassifier(
-        n_estimators=100, max_leaf_nodes=200, random_state=RANDOM_SEED, n_jobs=-1, verbose=2)
+    best_model = GradientBoostingClassifier(
+        n_estimators=100, max_leaf_nodes=200, random_state=RANDOM_SEED, verbose=2)
 
     #######################################################
 
