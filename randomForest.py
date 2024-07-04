@@ -19,7 +19,7 @@ if __name__ == "__main__":
     print(data.head())
     print(data.info())
 
-    data_sample = data.sample(n=200000, random_state=RANDOM_SEED)
+    data_sample = data.sample(n=500000, random_state=RANDOM_SEED)
     data_sample = format_data_frame(data_sample)
     data_sample = remove_outside_la(data_sample)
 
@@ -33,7 +33,8 @@ if __name__ == "__main__":
                                           'SEASON',
                                           'WEEKDAY',
                                           'DATE.OCC.Year',
-                                          'Diff between OCC and Report']]
+                                          'Diff between OCC and Report',
+                                          'Status']]
 
     features = optimize_data_types(features)
 
@@ -49,6 +50,7 @@ if __name__ == "__main__":
     features = pd.get_dummies(features, columns=['SEASON'])
     features = pd.get_dummies(features, columns=['DATE.OCC.Year'])
     features = pd.get_dummies(features, columns=['WEEKDAY'])
+    features = pd.get_dummies(features, columns=['Status'])
 
     logger.info('---------------------------------------------')
     logger.info("Data-Preparation finished ...")
