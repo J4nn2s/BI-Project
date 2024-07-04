@@ -4,17 +4,16 @@ from sklearn.ensemble import RandomForestClassifier
 import numpy as np
 from sklearn.model_selection import RandomizedSearchCV
 
-##### Mini-Spielerei. Das dauert noch bis wir uns hierum kümmern.
+# Mini-Spielerei. Das dauert noch bis wir uns hierum kümmern.
 
 
 def grid_tune_hyperparameters(
     model: RandomForestClassifier,
     X_train: np.ndarray,
     y_train: np.ndarray,
-    param_grid: Dict[str, list],
     cv_splits: int = 5,
     random_state: int = 42,
-    verbose: int = 2
+    verbose: int = 1
 ) -> GridSearchCV:
     """
     Führt eine Hyperparameter-Tuning mit GridSearchCV durch.
@@ -31,6 +30,14 @@ def grid_tune_hyperparameters(
     Returns:
     - grid_search: Das GridSearchCV-Objekt nach dem Fitting
     """
+    param_grid = {
+        'n_estimators': [25],
+        'max_samples': [0.5, 0.8, 1.0],
+        'max_depth': [10, 15, 20, None],
+        'min_samples_split': [10, None],
+        'min_samples_leaf': [5, None],
+    }
+
     cv = StratifiedKFold(n_splits=cv_splits, shuffle=True,
                          random_state=random_state)
     grid_search = GridSearchCV(

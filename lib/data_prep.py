@@ -96,17 +96,6 @@ def remove_outside_la(data: pd.DataFrame) -> pd.DataFrame:
     return data_in_la
 
 
-def optimize_data_types(df: pd.DataFrame) -> pd.DataFrame:
-    for col in df.columns:
-        col_type = df[col].dtype
-        if col_type != object:
-            if col_type in ['int64', 'int32']:
-                df[col] = pd.to_numeric(df[col], downcast='integer')
-            elif col_type in ['float64', 'float32']:
-                df[col] = pd.to_numeric(df[col], downcast='float')
-    return df
-
-
 def checking_missing_coordinates(data: pd.DataFrame) -> bool:
     # Überprüft, ob es fehlende Werte in den Spalten 'Latitude' oder 'Longitude' gibt
     missing_latitude = data['Latitude'].isnull().any()

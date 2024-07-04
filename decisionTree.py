@@ -19,7 +19,7 @@ if __name__ == "__main__":
     print(data.head())
     print(data.info())
 
-    data_sample = data.sample(n=300000, random_state=RANDOM_SEED)
+    data_sample = data.sample(n=500000, random_state=RANDOM_SEED)
     data_sample = format_data_frame(data_sample)
     data_sample = remove_outside_la(data_sample)
 
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     logger.info(features.head())
 
     X_train, X_test, y_train, y_test = train_test_split(
-        features, target, test_size=0.4, random_state=RANDOM_SEED)
+        features, target, test_size=0.2, random_state=RANDOM_SEED)
 
     del data_sample, target
     gc.collect()
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     logger.info("Training the model ...")
 
     best_model = DecisionTreeClassifier(
-        max_leaf_nodes=200, random_state=RANDOM_SEED)
+        max_leaf_nodes=400, random_state=RANDOM_SEED)
 
     #######################################################
 

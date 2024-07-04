@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.preprocessing import StandardScaler
 from loguru import logger
@@ -14,6 +14,10 @@ import gc
 # RANDOM_SEED = random.randint(1, 10)  # können wir final setten zum Schluss
 RANDOM_SEED = 41
 if __name__ == "__main__":
+    tuning: bool = False
+    start: str = input("Mit Tuning? -> Enter (Y)")
+    if start == "Y":
+        tuning: bool = True
     data = load_data()
 
     print(data.head())
@@ -34,9 +38,8 @@ if __name__ == "__main__":
                                           'WEEKDAY',
                                           'DATE.OCC.Year',
                                           'Diff between OCC and Report',
-                                          'Status']]
-
-    features = optimize_data_types(features)
+                                          'Status',
+                                          'RD']]
 
     target = data_sample['Crm.Cd']
 
@@ -56,10 +59,10 @@ if __name__ == "__main__":
     logger.info("Data-Preparation finished ...")
     logger.info("Summary statistics after standardization:")
     logger.info(features.describe())
-    logger.info(features.head())
+    logger.info(features.info())
 
     X_train, X_test, y_train, y_test = train_test_split(
-        features, target, test_size=0.4, random_state=RANDOM_SEED)
+        features, target, test_size=0.2, random_state=RANDOM_SEED)
 
     del data_sample, target
     gc.collect()
@@ -67,57 +70,45 @@ if __name__ == "__main__":
     logger.info('---------------------------------------------')
     logger.info("Training the model ...")
 
-    # Spielerrei mit tuning, kann man vielleicht auch löschen
-
-    #############################################################
-    # param_grid = {
-    #     'n_estimators': [100, 150],
-    #     'max_depth': [10, 20, 30, None],
-    #     'min_samples_split': [10, 20, None],
-    #     'min_samples_leaf': [2, 5, None],
-    # }
-
-    # param_distributions = {
-    #     'n_estimators': [100, 150, 200, 250],
-    #     'max_depth': [None, 10, 20, 30],
-    #     'min_samples_split': [10, 20, 30],
-    #     'min_samples_leaf': [1, 2, 3],
-    # }
-
-    # rf_model = RandomForestClassifier(random_state=RANDOM_SEED)
-
-    # # grid_search = tune_hyperparameters(
-    # #     rf_model, X_train, y_train, param_grid, random_state=RANDOM_SEED)
-
-    # grid_search = randomize_tune_hyperparameters(
-    #     model=rf_model, X_train=X_train, y_train=y_train,
-    #     param_distributions=param_distributions, cv_splits=5, n_iter=10,
-    #     random_state=42, verbose=2
-    # )
+    if tuning:
+        rf_model = RandomForestClassifier(
+            random_state=RANDOM_SEED, verbose=2, n_jobs=-1)
+        logger.info("You chose to tune the model. This will take a moment...")
+        grid_search = grid_tune_hyperparameters(
+            rf_model, X_train, y_train, random_state=RANDOM_SEED)
 
     # # Beste Parameter und beste Score anzeigen
-    # best_params = grid_search.best_params_
-    # best_score = grid_search.best_score_
-    # logger.info(f"Beste Parameter: {best_params}")
-    # logger.info(f"Beste Score: {best_score}")
+        best_params = grid_search.best_params_
+        best_score = grid_search.best_score_
+        logger.info(f"Beste Parameter: {best_params}")
+        logger.info(f"Beste Score: {best_score}")
 
-    # best_params = grid_search.best_params_
-    # best_score = grid_search.best_score_
-    # logger.info(f"Beste Parameter: {best_params}")
-    # logger.info(f"Beste Score: {best_score}")
-
-    # # Beste Modellkonfiguration verwenden
-    # best_model = grid_search.best_estimator_
+        best_model = grid_search.best_estimator_
 
     ########################################################
 
     # vorher cv gemacht und wir verwenden einfach die Ergebnisse davon
 
     # Modell mit den besten Parametern initialisieren
-    best_model = GradientBoostingClassifier(
-        n_estimators=100, max_leaf_nodes=200, random_state=RANDOM_SEED, verbose=2)
+    # best_model = RandomForestClassifier(
+    #     n_estimators=100, max_leaf_nodes=200, random_state=RANDOM_SEED, verbose=2)
+    if not tuning:
+        best_model = RandomForestClassifier(n_estimators=75,
+                                            min_samples_leaf=5,
+                                            min_samples_split=10,
+                                            max_features='sqrt',
+                                            max_depth=None,  # mein PC schmiert sonst ab
+                                            random_state=RANDOM_SEED,
+                                            verbose=2,
+                                            n_jobs=3)
 
     #######################################################
+
+# - Beste Parameter: {'max_depth': None,
+#  'max_samples': 1.0,
+#  'min_samples_leaf': 5,
+#  'min_samples_split': 10,
+#  'n_estimators': 25}
 
     # Modell trainieren
     best_model.fit(X_train, y_train)
