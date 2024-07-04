@@ -1,0 +1,5 @@
+# Ignoriere alle __pycache__ Verzeichnisse
+__pycache__/
+
+# Ignoriere alle .pyc Dateien
+*.pyc
