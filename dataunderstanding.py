@@ -8,6 +8,115 @@ import os
 from loguru import logger
 import geopandas as gpd
 from shapely.geometry import Point
+import folium
+from folium.plugins import HeatMap
+import numpy as np
+import geopandas as gpd
+import matplotlib.pyplot as plt
+from shapely.geometry import Point
+
+
+def clean_coordinates(data: pd.DataFrame) -> pd.DataFrame:
+    data[['Latitude', 'Longitude']] = data['Location.1'].str.extract(
+        r'\(([^,]+), ([^)]+)\)').astype(float)
+
+    invalid_coords = (data['Latitude'] == 0.0) & (data['Longitude'] == 0.0)
+    data.loc[invalid_coords, ['Latitude', 'Longitude']] = [np.nan, np.nan]
+
+    area_coords_mean: pd.DataFrame = data.groupby(
+        'AREA')[['Latitude', 'Longitude']].transform('mean')
+    data[['Latitude', 'Longitude']] = data[[
+        'Latitude', 'Longitude']].fillna(area_coords_mean)
+
+    invalid_coords_after = data['Latitude'].isna() | data['Longitude'].isna()
+    count_invalid_coords = invalid_coords_after.sum()
+    print(f"Anzahl der Zeilen, die gelöscht werden: {count_invalid_coords}")
+
+    data = data.dropna(subset=['Latitude', 'Longitude'])
+    logger.info("Cleaned the coordinates")
+    return data
+
+
+def filter_outside_points(df: pd.DataFrame) -> pd.DataFrame:
+    # Definieren der Grenzen
+    north_bound = 34.337314
+    east_bound = -118.155348
+    south_bound = 33.704599
+    west_bound = -118.668225
+
+    # Filtern der Punkte außerhalb des gewünschten Bereichs
+    outside_points = df[
+        (df['Latitude'] > north_bound) | (df['Latitude'] < south_bound) |
+        (df['Longitude'] > east_bound) | (df['Longitude'] < west_bound)
+    ]
+
+    # Zählen der Punkte außerhalb des Bereichs
+    count_outside_points = outside_points.shape[0]
+    print(f"Anzahl der Punkte außerhalb des gewünschten Bereichs: {
+          count_outside_points}")
+
+    # Entfernen der Punkte außerhalb des Bereichs
+    df_filtered = df.drop(outside_points.index)
+
+    return df_filtered
+
+
+def plot_crime_heatmap2(df: pd.DataFrame) -> None:
+    if 'Latitude' not in df.columns or 'Longitude' not in df.columns:
+        logger.error(
+            "Columns 'Latitude' and 'Longitude' not found in DataFrame")
+        return
+
+    df = df.dropna(subset=['Latitude', 'Longitude'])
+
+    if df.empty:
+        logger.warning(
+            "No data available after dropping rows with missing 'Latitude' or 'Longitude'")
+        return
+
+    # Create a base map
+    base_map = folium.Map(
+        location=[df['Latitude'].mean(), df['Longitude'].mean()], zoom_start=12)
+
+    # Create a heatmap layer
+    heat_data = [[row['Latitude'], row['Longitude']]
+                 for index, row in df.iterrows()]
+    HeatMap(heat_data).add_to(base_map)
+
+    # Save the map as an HTML file
+    map_path = 'Plots/crime_heatmap_filtered_map.html'
+    os.makedirs('Plots', exist_ok=True)
+    base_map.save(map_path)
+    logger.info(f"Crime heatmap saved as {map_path}")
+
+
+def plot_crime_heatmap(df: pd.DataFrame) -> None:
+    if 'Latitude' not in df.columns or 'Longitude' not in df.columns:
+        logger.error(
+            "Columns 'Latitude' and 'Longitude' not found in DataFrame")
+        return
+
+    df = df.dropna(subset=['Latitude', 'Longitude'])
+
+    if df.empty:
+        logger.warning(
+            "No data available after dropping rows with missing 'Latitude' or 'Longitude'")
+        return
+
+    # Create a base map
+    base_map = folium.Map(
+        location=[df['Latitude'].mean(), df['Longitude'].mean()], zoom_start=12)
+
+    # Create a heatmap layer
+    heat_data = [[row['Latitude'], row['Longitude']]
+                 for index, row in df.iterrows()]
+    HeatMap(heat_data).add_to(base_map)
+
+    # Save the map as an HTML file
+    map_path = 'Plots/crime_heatmap_map.html'
+    os.makedirs('Plots', exist_ok=True)
+    base_map.save(map_path)
+    logger.info(f"Crime heatmap saved as {map_path}")
 
 
 def detailed_yearly_comparison(df: pd.DataFrame, year: int) -> None:
@@ -71,6 +180,44 @@ def plot_long_term_trends(df: pd.DataFrame) -> None:
 
     except Exception as e:
         logger.error(f"An error occurred while plotting long term trends: {e}")
+
+
+def plot_top5_crimes_weekday_analysis(df: pd.DataFrame) -> None:
+    # Convert 'Date.Rptd' to datetime and extract 'DayOfWeek'
+    df['Date.Rptd'] = pd.to_datetime(df['Date.Rptd'])
+    df['DayOfWeek'] = df['Date.Rptd'].dt.dayofweek
+
+    # Get the top 5 crime types
+    top5_crimes = df['CrmCd.Desc'].value_counts().head(5).index
+
+    # Filter the DataFrame to include only the top 5 crimes
+    df_top5 = df[df['CrmCd.Desc'].isin(top5_crimes)]
+
+    # Group by 'CrmCd.Desc' and 'DayOfWeek' and count the occurrences
+    crime_day_counts = df_top5.groupby(
+        ['CrmCd.Desc', 'DayOfWeek']).size().reset_index(name='Count')
+
+    # Pivot the data for easier plotting
+    crime_day_pivot = crime_day_counts.pivot(
+        index='DayOfWeek', columns='CrmCd.Desc', values='Count')
+
+    # Plotting
+    plt.figure(figsize=(14, 8))
+    crime_day_pivot.plot(kind='bar', stacked=True,
+                         figsize=(14, 8), colormap='tab20')
+
+    plt.title('Top 5 Crimes by Day of the Week')
+    plt.xlabel('Day of the Week')
+    plt.ylabel('Number of Crimes')
+    plt.xticks(ticks=range(7), labels=[
+               'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], rotation=0)
+    plt.legend(title='Crime Type', bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    os.makedirs('Plots', exist_ok=True)
+    plt.savefig('Plots/top5_crimes_weekday_analysis.png')
+    logger.info(
+        "Top 5 crimes weekday analysis saved as 'Plots/top5_crimes_weekday_analysis.png'")
+    plt.show()
 
 
 def plot_seasonal_analysis(df: pd.DataFrame) -> None:
@@ -367,6 +514,48 @@ if __name__ == "__main__":
     num_unique_street = data['Cross.Street'].nunique()
     logger.info(f"Count of different 'street': {num_unique_street}")
 
+    data = clean_coordinates(data)
+
+    logger.info("Data loaded: First Information About the Dataframe")
+    logger.info("Datatypes of the DataFrame")
+    logger.info(data.info())
+
+    logger.info("Checking the first rows")
+    logger.info(data.head())
+
+    outside_points = filter_outside_points(data)
+    logger.info("First few rows of outside points")
+    logger.info(outside_points.head())
+
+    # Speichern der Datenpunkte außerhalb des gewünschten Bereichs
+    # outside_points.to_csv('outside_points.csv', index=False)
+    # logger.info("Outside points saved to 'outside_points.csv'")
+
+    data_filtered = filter_outside_points(data)
+    logger.info("Filtered data: First Information About the Dataframe")
+    logger.info(data_filtered.info())
+
+    data = clean_coordinates(data)
+
+    logger.info("Data loaded: First Information About the Dataframe")
+    logger.info("Datatypes of the DataFrame")
+    logger.info(data.info())
+
+    logger.info("Checking the first rows")
+    logger.info(data.head())
+
+    outside_points = filter_outside_points(data)
+    logger.info("First few rows of outside points")
+    logger.info(outside_points.head())
+
+    # Speichern der Datenpunkte außerhalb des gewünschten Bereichs
+    # outside_points.to_csv('outside_points.csv', index=False)
+    logger.info("Outside points saved to 'outside_points.csv'")
+
+    # data_filtered = filter_outside_points(data)
+    logger.info("Filtered data: First Information About the Dataframe")
+    logger.info(data_filtered.info())
+
     category_counts = data["Crm.Cd"].value_counts()
 
     categories_less_than_50 = category_counts[category_counts < 50]
@@ -377,11 +566,14 @@ if __name__ == "__main__":
 
     # THE PLOTS ##########################W
 
-    # create_time_series_plot(data)
-    # plot_area_code_frequencies(data)
-    # histogram_time(data)
-    # plot_top10_crimes(data)
+    # # create_time_series_plot(data)
+    # # plot_area_code_frequencies(data)
+    # # histogram_time(data)
+    # # plot_top10_crimes(data)
     # # show_coordinates(data)
-    # plot_seasonal_analysis(data)
-    # plot_long_term_trends(data)
-    # detailed_yearly_comparison(data, 2016)
+    # # plot_seasonal_analysis(data)
+    # # plot_long_term_trends(data)
+    # # detailed_yearly_comparison(data, 2016)
+    # plot_top5_crimes_weekday_analysis(data)
+    # plot_crime_heatmap(data)
+    # plot_crime_heatmap2(data_filtered)
