@@ -13,7 +13,7 @@ def grid_tune_hyperparameters(
     y_train: np.ndarray,
     cv_splits: int = 5,
     random_state: int = 42,
-    verbose: int = 1
+    verbose: int = 0
 ) -> GridSearchCV:
     """
     Führt eine Hyperparameter-Tuning mit GridSearchCV durch.
@@ -31,11 +31,10 @@ def grid_tune_hyperparameters(
     - grid_search: Das GridSearchCV-Objekt nach dem Fitting
     """
     param_grid = {
-        'n_estimators': [25],
-        'max_samples': [0.5, 0.8, 1.0],
-        'max_depth': [10, 15, 20, None],
-        'min_samples_split': [10, None],
-        'min_samples_leaf': [5, None],
+        'n_estimators': [50],
+        'max_depth': [10, 20, 30, None],
+        'min_samples_split': [10, 20, 50, None],
+        'min_samples_leaf': [3, 5, 15, None],
     }
 
     cv = StratifiedKFold(n_splits=cv_splits, shuffle=True,
