@@ -351,16 +351,29 @@ if __name__ == "__main__":
     logger.info("Checking whether Coordinates are correct")
     logger.info(f" Count of data outside of LA: {count_outside_la(data)}")
     logger.info(get_count_of_crimes(data))
+
     num_unique_areas = data['AREA'].nunique()
+
     logger.info(f"Count of different 'AREA': {num_unique_areas}")
     logger.info(f"Count per 'AREA': {get_count_of_areas(data)}")
+
     num_unique_crime_categories = data["Crm.Cd"].nunique()
     logger.info(f"Count of different 'Crm.Cd': {num_unique_crime_categories}")
+
     num_unique_crime_describtions = data["CrmCd.Desc"].nunique()
     logger.info(f"Count of different describtions for crime 'CrmCd.Desc': {
                 num_unique_crime_categories}")
+
     num_unique_street = data['Cross.Street'].nunique()
     logger.info(f"Count of different 'street': {num_unique_street}")
+
+    category_counts = data["Crm.Cd"].value_counts()
+
+    categories_less_than_50 = category_counts[category_counts < 50]
+
+    num_categories_less_than_50 = len(categories_less_than_50)
+    logger.info(f"Number of 'Crm.Cd' categories with less than 50 observations: {
+                num_categories_less_than_50}")
 
     # THE PLOTS ##########################W
 

@@ -20,7 +20,7 @@ RANDOM_SEED = random.randint(1, 10)  # können wir final setten zum Schluss
 def print_memory_usage():
     process = psutil.Process()
     mem_info = process.memory_info()
-    print(f"RSS: {mem_info.rss / (1024 * 1024)          :.2f} MB, VMS: {mem_info.vms / (1024 * 1024):.2f} MB")
+    print(f"RSS: {mem_info.rss / (1024 * 1024):.2f} MB, VMS: {mem_info.vms / (1024 * 1024):.2f} MB")
 
 
 def bayesian_optimization_forest(trial, X_train, y_train):
@@ -45,6 +45,9 @@ def bayesian_optimization_forest(trial, X_train, y_train):
     class_weight = trial.suggest_categorical(
         'class_weight', [None, 'balanced'])
 
+    criterion = trial.suggest_categorical(
+        'criterion', ['gini', 'entropy', 'log_loss'])
+
     if oob_score and not bootstrap:
         bootstrap = True
 
@@ -58,6 +61,7 @@ def bayesian_optimization_forest(trial, X_train, y_train):
         oob_score=oob_score,
         class_weight=class_weight,
         random_state=RANDOM_SEED,
+        criterion=criterion,
         n_jobs=2,  # meiner schmiert ab mit -1
         verbose=2
     )

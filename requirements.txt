@@ -8,3 +8,4 @@ tensorflow
 loguru
 tabulate
 geopandas
+optuna

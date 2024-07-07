@@ -1,19 +1,78 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, plot_tree, export_graphviz
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, log_loss
 from sklearn.preprocessing import StandardScaler
 from loguru import logger
 from lib.data_prep import *
 import random
-from sklearn.model_selection import train_test_split, GridSearchCV, StratifiedKFold
-from lib.tune_random_forest import grid_tune_hyperparameters, randomize_tune_hyperparameters
+from sklearn.model_selection import train_test_split
 import gc
 import optuna
+import pydotplus
+from IPython.display import Image
+import matplotlib.pyplot as plt
+import re
+import matplotlib
 
-# RANDOM_SEED = random.randint(1, 10)  # können wir final setten zum Schluss
-RANDOM_SEED = 41
+# to do , das sieht einfach scheiße aus
+
+
+def replace_text(obj):
+    if isinstance(obj, plt.Text):
+        txt = obj.get_text()
+        # Entferne `value` und `proportion`-Informationen aus dem Text
+        txt = re.sub(r'\svalue:\s*\d+', '', txt)  # Entfernt `value`-Texte
+        txt = re.sub(r'\sproportion:\s*\d+(\.\d+)?', '',
+                     txt)  # Entfernt `proportion`-Texte
+        obj.set_text(txt)
+    return obj
+
+
+def save_decision_tree_plot(model,
+                            feature_names,
+                            class_names,
+                            output_dir='Plots',
+                            filename='decision_tree_plot.png',
+                            max_depth=4,
+                            filled=True,
+                            fontsize=10,
+                            impurity=True,
+                            node_ids=False,
+                            label='all') -> None:
+    class_names = [str(name) for name in class_names]
+    feature_names = [str(name) for name in feature_names]
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    plt.figure(figsize=(20, 15))
+    plot_tree(model,
+              feature_names=feature_names,
+              class_names=class_names,
+              filled=filled,
+              max_depth=max_depth,
+              fontsize=fontsize,
+              impurity=impurity,  # Gini-Wert anzeigen
+              proportion=False,  # Proportion nicht anzeigen
+              node_ids=node_ids,  # Node-IDs anzeigen
+              label=label)  # Zeigt alle Labels (Feature, Threshold, Class)
+
+    ax = plt.gca()
+    for text in ax.texts:
+        replace_text(text)
+
+    output_path = os.path.join(output_dir, filename)
+
+    # Plot speichern
+    plt.savefig(output_path, bbox_inches='tight')
+    plt.close()
+
+    logger.info(f"Decision tree plot saved in {output_path}")
+
+
+RANDOM_SEED = random.randint(1, 10)  # können wir final setten zum Schluss
+# RANDOM_SEED = 41
 
 
 def bayesian_optimization(trial, X_train, y_train):
@@ -22,7 +81,8 @@ def bayesian_optimization(trial, X_train, y_train):
     min_samples_leaf = trial.suggest_int('min_samples_leaf', 1, 10)
     max_features = trial.suggest_categorical(
         'max_features', [None, 'sqrt', 'log2'])
-    criterion = trial.suggest_categorical('criterion', ['gini', 'entropy'])
+    criterion = trial.suggest_categorical(
+        'criterion', ['gini', 'entropy', 'log_loss'])
 
     clf = DecisionTreeClassifier(
         max_depth=max_depth,
@@ -49,7 +109,7 @@ if __name__ == "__main__":
     print(data_sample.head())
     print(data_sample.info())
 
-    # data_sample = data.sample(n=900000, random_state=RANDOM_SEED)
+    data_sample = data_sample.sample(n=200000, random_state=RANDOM_SEED)
     data_sample = format_data_frame(data_sample)
     data_sample = remove_outside_la(data_sample)
 
@@ -102,9 +162,8 @@ if __name__ == "__main__":
         # Train the best model
         best_model = DecisionTreeClassifier(
             **best_params, random_state=RANDOM_SEED)
-        best_model.fit(X_train, y_train)
 
-    del data_sample, target
+    del data_sample
     gc.collect()
 
     logger.info('---------------------------------------------')
@@ -119,7 +178,7 @@ if __name__ == "__main__":
             criterion="gini",
             random_state=RANDOM_SEED)
 
-    #######################################################
+    ############################################################
 
     '''
     :100 - Best parameters found: {'max_depth': 13,
@@ -128,12 +187,18 @@ if __name__ == "__main__":
         'max_features': None,
         'criterion': 'gini'}
     '''
-    #######################################################
+    ############################################################
 
     # Modell trainieren
     best_model.fit(X_train, y_train)
+    feature_names = features.columns.tolist()
+    class_names = target.unique().tolist()
 
-    del X_train, y_train
+    # max_depth kann optional angepasst werden
+    save_decision_tree_plot(best_model, feature_names,
+                            class_names, max_depth=4)
+
+    del X_train, y_train, target
     gc.collect()
 
     y_pred = best_model.predict(X_test)
