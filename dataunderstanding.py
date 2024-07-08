@@ -379,12 +379,13 @@ def histogram_time(data: pd.DataFrame) -> None:
 
 
 def plot_top10_crimes(data: pd.DataFrame) -> None:
-    common_crimes = ['TRAFFIC DR', 'BATTERY - SIMPLE ASSAULT',
+    common_crimes = ['TRAFFIC DR #', 'BATTERY - SIMPLE ASSAULT',
                      'VEHICLE - STOLEN', 'BURGLARY FROM VEHICLE', 'BURGLARY',
                      'THEFT PLAIN - PETTY ($950 & UNDER)',
                      'THEFT OF IDENTITY', 'SPOUSAL(COHAB) ABUSE - SIMPLE ASSAULT',
                      'ASSAULT WITH DEADLY WEAPON, AGGRAVATED ASSAULT',
                      'VANDALISM - FELONY ($400 & OVER, ALL CHURCH VANDALISMS)']
+
     df_filtered = data[data['CrmCd.Desc'].isin(common_crimes)].copy()
 
     df_filtered.loc[:, 'TIME.OCC'] = df_filtered['TIME.OCC'].astype(
