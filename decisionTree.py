@@ -10,22 +10,14 @@ import random
 from sklearn.model_selection import train_test_split
 import gc
 import optuna
-import pydotplus
-from IPython.display import Image
 import matplotlib.pyplot as plt
 import re
-import matplotlib
-
-# to do , das sieht einfach scheiße aus
 
 
 def replace_text(obj):
     if isinstance(obj, plt.Text):
         txt = obj.get_text()
-        # Entferne `value` und `proportion`-Informationen aus dem Text
-        txt = re.sub(r'\svalue:\s*\d+', '', txt)  # Entfernt `value`-Texte
-        txt = re.sub(r'\sproportion:\s*\d+(\.\d+)?', '',
-                     txt)  # Entfernt `proportion`-Texte
+        txt = re.sub(r'\svalue\s*=\s*\[[^\]]+\]', '', txt)
         obj.set_text(txt)
     return obj
 
