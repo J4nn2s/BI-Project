@@ -12,6 +12,7 @@ import gc
 import optuna
 import matplotlib.pyplot as plt
 import re
+from lib.crimeCategories import crime_categories
 
 
 def replace_text(obj):
