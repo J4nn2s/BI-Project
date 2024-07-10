@@ -1,5 +1,4 @@
 # crime_categories.py
-
 crime_categories = {
     'Gewaltverbrechen': [
         'OTHER ASSAULT',
@@ -187,11 +186,8 @@ crime_categories = {
 }
 
 
-# def categorize_crime(description):
-#     for category, crimes in crime_categories.items():
-#         if description in crimes:
-#             return category
-#     return 'Unbekannt'  # Für Verbrechen, die nicht im Dictionary vorhanden sind
-
-# # Füge die "Crime Categorie"-Spalte hinzu
-# data['Crime Categorie'] = data['CrmCd.Desc'].apply(categorize_crime)
+def categorize_crime(description):
+    for category, crimes in crime_categories.items():
+        if description in crimes:
+            return category
+    return 'Unbekannt'  # Für Verbrechen, die nicht im Dictionary vorhanden sind

@@ -12,7 +12,7 @@ import gc
 import optuna
 import matplotlib.pyplot as plt
 import re
-from lib.crimeCategories import crime_categories
+from lib.crimeCategories import crime_categories, categorize_crime
 
 
 def replace_text(obj):
@@ -105,6 +105,9 @@ if __name__ == "__main__":
     data_sample = data_sample.sample(n=200000, random_state=RANDOM_SEED)
     data_sample = format_data_frame(data_sample)
     data_sample = remove_outside_la(data_sample)
+    logger.info(f"Grouping Categories")
+    data_sample['Crime Categorie'] = data_sample['CrmCd.Desc'].apply(
+        categorize_crime)
 
     # del data
     # gc.collect()
@@ -120,7 +123,7 @@ if __name__ == "__main__":
                                           'RD',
                                           'Status']]
 
-    target = data_sample['Crm.Cd']
+    target = data_sample['Crime Categorie']
 
     scaler = StandardScaler()
     scaled_features = scaler.fit_transform(
@@ -133,6 +136,7 @@ if __name__ == "__main__":
     features = pd.get_dummies(features, columns=['DATE.OCC.Year'])
     features = pd.get_dummies(features, columns=['WEEKDAY'])
     features = pd.get_dummies(features, columns=['Status'])
+    features = pd.get_dummies(features, columns=['RD'])
 
     logger.info('---------------------------------------------')
     logger.info("Data-Preparation finished ...")
