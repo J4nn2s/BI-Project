@@ -57,6 +57,11 @@ def load_data_less_memory() -> pd.DataFrame:
 
             df = df.drop_duplicates()
             df = df[df["CrmCd.Desc"] != "nan"]
+            df['CrmCd.Desc'] = df['CrmCd.Desc'].replace(
+                "nan", np.nan)
+
+            df = df.dropna(subset=['CrmCd.Desc'])
+
             return df
 
 

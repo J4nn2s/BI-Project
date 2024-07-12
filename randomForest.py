@@ -22,7 +22,8 @@ RANDOM_SEED = random.randint(1, 10)  # können wir final setten zum Schluss
 def print_memory_usage():
     process = psutil.Process()
     mem_info = process.memory_info()
-    print(f"RSS: {mem_info.rss / (1024 * 1024):.2f} MB, VMS: {mem_info.vms / (1024 * 1024):.2f} MB")
+    print(f"RSS: {mem_info.rss / (1024 * 1024)
+          :.2f} MB, VMS: {mem_info.vms / (1024 * 1024):.2f} MB")
 
 
 def bayesian_optimization_forest(trial, X_train, y_train):
@@ -119,7 +120,7 @@ if __name__ == "__main__":
                                           'SEASON',
                                           'WEEKDAY',
                                           'DATE.OCC.Year',
-                                          #   'DATE.OCC.Month',
+                                          'DATE.OCC.Month',
                                           'Diff between OCC and Report',
                                           'Status',
                                           'RD']]
@@ -135,10 +136,10 @@ if __name__ == "__main__":
     features = pd.get_dummies(features, columns=['AREA'])
     features = pd.get_dummies(features, columns=['SEASON'])
     features = pd.get_dummies(features, columns=['DATE.OCC.Year'])
-    # features = pd.get_dummies(features, columns=['DATE.OCC.Month'])
+    features = pd.get_dummies(features, columns=['DATE.OCC.Month'])
     features = pd.get_dummies(features, columns=['WEEKDAY'])
     features = pd.get_dummies(features, columns=['Status'])
-    features = pd.get_dummies(features, columns=['RD'])
+    # features = pd.get_dummies(features, columns=['RD'])
 
     logger.info('---------------------------------------------')
     logger.info("Data-Preparation finished ...")
@@ -147,7 +148,7 @@ if __name__ == "__main__":
     logger.info(features.info())
 
     X_train, X_test, y_train, y_test = train_test_split(
-        features, target, test_size=0.2, random_state=RANDOM_SEED)
+        features, target, test_size=0.3, random_state=RANDOM_SEED)
 
     del data_sample, target
     gc.collect()

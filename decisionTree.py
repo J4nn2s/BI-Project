@@ -65,7 +65,7 @@ def save_decision_tree_plot(model,
 
 
 RANDOM_SEED = random.randint(1, 10)  # können wir final setten zum Schluss
-# RANDOM_SEED = 41
+# RANDOM_SEED = 42
 
 
 def bayesian_optimization(trial, X_train, y_train):
@@ -92,7 +92,7 @@ def bayesian_optimization(trial, X_train, y_train):
 if __name__ == "__main__":
     tuning: bool = False
 
-    start: str = input("Mit Tuning? -> Enter (Y) ")
+    start: str = input("Mit Tuning? -> Enter (Y/y) ")
 
     if start == "Y" or start == "y":
         tuning: bool = True
@@ -102,7 +102,7 @@ if __name__ == "__main__":
     print(data_sample.head())
     print(data_sample.info())
 
-    data_sample = data_sample.sample(n=700000, random_state=RANDOM_SEED)
+    # data_sample = data_sample.sample(n=700000, random_state=RANDOM_SEED)
     data_sample = format_data_frame(data_sample)
     data_sample = remove_outside_la(data_sample)
     logger.info(f"Grouping Categories")
@@ -118,10 +118,10 @@ if __name__ == "__main__":
                                           'Longitude',
                                           'SEASON',
                                           'WEEKDAY',
-                                          #   'DATE.OCC.Month',
+                                          'DATE.OCC.Month',
                                           'DATE.OCC.Year',
                                           'Diff between OCC and Report',
-                                          'RD',
+                                          #   'RD',
                                           'Status']]
 
     target = data_sample['Crime Categorie']
@@ -136,8 +136,9 @@ if __name__ == "__main__":
     features = pd.get_dummies(features, columns=['SEASON'])
     features = pd.get_dummies(features, columns=['DATE.OCC.Year'])
     features = pd.get_dummies(features, columns=['WEEKDAY'])
+    features = pd.get_dummies(features, columns=['DATE.OCC.Month'])
     features = pd.get_dummies(features, columns=['Status'])
-    features = pd.get_dummies(features, columns=['RD'])
+    # features = pd.get_dummies(features, columns=['RD'])
 
     print(features.info())
 
@@ -154,7 +155,7 @@ if __name__ == "__main__":
         logger.info("Starting Bayesian Optimization")
         study = optuna.create_study(direction='maximize')
         study.optimize(lambda trial: bayesian_optimization(
-            trial, X_train, y_train), n_trials=50, n_jobs=1, show_progress_bar=True)
+            trial, X_train, y_train), n_trials=100, n_jobs=1, show_progress_bar=True)
 
         best_params = study.best_params
         logger.info(f"Best parameters found: {best_params}")
@@ -206,6 +207,11 @@ if __name__ == "__main__":
 
     logger.info("Classification Report:")
     logger.info(classification_report(y_test, y_pred))
+
+    feature_importances = pd.DataFrame(best_model.feature_importances_,
+                                       index=features.columns,
+                                       columns=['importance']).sort_values('importance', ascending=False)
+    logger.info(f"Feature Importances:\n {feature_importances}")
 
     # Konfusionsmatrix
     logger.info("Confusion Matrix:")
