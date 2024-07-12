@@ -20,6 +20,43 @@ def load_data() -> pd.DataFrame:
                              "Date.Rptd", "DATE.OCC"])
 
             df = df.drop_duplicates()
+
+            df['CrmCd.Desc'] = df['CrmCd.Desc'].replace(
+                "nan", np.nan)
+
+            df = df.dropna(subset=['CrmCd.Desc'])
+            return df
+
+
+def load_data_less_memory() -> pd.DataFrame:
+    dtype_dict = {
+        'DR.NO': 'int32',
+        'TIME.OCC': 'int32',
+        'AREA': 'int32',
+        'AREA.NAME': 'category',
+        'RD': 'int32',
+        'Crm.Cd': 'int32',
+        'CrmCd.Desc': 'category',
+        'Status': 'category',
+        'Status.Desc': 'category',
+        'LOCATION': 'category',
+        'Cross.Street': 'category',
+        'Location.1': 'category'
+    }
+    current_dir = os.getcwd()
+    zip_path = os.path.join(current_dir, "Data/Crimes_2012-2016.csv.zip")
+
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        # Annahme: Es gibt nur eine Datei in der ZIP
+        csv_file_name = zip_ref.namelist()[0]
+        with zip_ref.open(csv_file_name) as csv_file:
+            # BytesIO wird verwendet, um die Datei im Speicher zu halten
+            data = BytesIO(csv_file.read())
+            df = pd.read_csv(data, dtype=dtype_dict, sep=",", parse_dates=[
+                             "Date.Rptd", "DATE.OCC"])
+
+            df = df.drop_duplicates()
+            df = df[df["CrmCd.Desc"] != "nan"]
             return df
 
 
@@ -29,7 +66,7 @@ def format_data_frame(data: pd.DataFrame) -> pd.DataFrame:
     data['DATE.OCC.Day'] = data['DATE.OCC'].dt.day.astype(int)
 
     data[['Latitude', 'Longitude']] = data['Location.1'].str.extract(
-        r'\(([^,]+), ([^)]+)\)').astype(float)
+        r'\(([^,]+), ([^)]+)\)').astype('float32')
 
     data['SEASON'] = data['DATE.OCC.Month'].apply(get_season)
     data['WEEKDAY'] = data['DATE.OCC'].dt.day_name()
@@ -42,9 +79,6 @@ def format_data_frame(data: pd.DataFrame) -> pd.DataFrame:
 
 
 def clean_coordinates(data: pd.DataFrame) -> pd.DataFrame:
-
-    data[['Latitude', 'Longitude']] = data['Location.1'].str.extract(
-        r'\(([^,]+), ([^)]+)\)').astype(float)
 
     invalid_coords: pd.Series[bool] = (
         data['Latitude'] == 0.0) & (data['Longitude'] == 0.0)
@@ -113,7 +147,7 @@ if __name__ == "__main__":
     print("Inhalt des aktuellen Verzeichnisses:", os.listdir())
     print("Inhalt des übergeordneten Verzeichnisses:", os.listdir('..'))
 
-    data = load_data()
+    data = load_data_less_memory()
     data[['Latitude', 'Longitude']] = data['Location.1'].str.extract(
         r'\(([^,]+), ([^)]+)\)').astype(float)
 

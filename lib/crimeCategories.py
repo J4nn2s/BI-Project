@@ -1,4 +1,6 @@
-# crime_categories.py
+# from data_prep import *
+
+
 crime_categories = {
     'Gewaltverbrechen': [
         'OTHER ASSAULT',
@@ -34,9 +36,13 @@ crime_categories = {
         'BATTERY POLICE (SIMPLE)'
     ],
     'Eigentumsdelikte': [
+        'THEFT FROM MOTOR VEHICLE - ATTEMPT',
+        'VEHICLE - STOLEN',
+        'BIKE - STOLEN',
         'LYNCHING - ATTEMPTED',
         'LYNCHING',
         'THEFT, COIN MACHINE - GRAND ($950.01 & OVER)',
+        'THEFT, COIN MACHINE - GRAND',
         'THEFT FROM PERSON - ATTEMPT',
         'BURGLARY',
         'THEFT, COIN MACHINE - PETTY ($950 & UNDER)',
@@ -69,7 +75,7 @@ crime_categories = {
         'BUNCO, ATTEMPT',
         'FALSE POLICE REPORT',
         'DISHONEST EMPLOYEE - GRAND THEFT',
-        'PURSE SNATCHING – ATTEMPT',
+        'PURSE SNATCHING - ATTEMPT',
         'DISHONEST EMPLOYEE - PETTY THEFT',
         'TELEPHONE PROPERTY - DAMAGE',
         'GRAND THEFT / AUTO REPAIR',
@@ -80,10 +86,11 @@ crime_categories = {
         'EMBEZZLEMENT, GRAND',
         'SHOPLIFTING-GRAND THEFT (OVER $401)',
         'THEFT, COIN MACHINE - PETTY',
+        'THEFT, COIN MACHINE - ATTEMPT',
         'PROPERTY MISSING RVD VEH - PETTY',
         'PETTY THEFT - AUTO REPAIR',
         'PROPERTY MISSING RVD VEH - GRAND',
-        'TILL TAP – PETTY',
+        'TILL TAP - PETTY',
         'BIKE - ATTEMPTED STOLEN',
         'PICKPOCKET, ATTEMPT',
         'THEFT, COIN MACHINE – GRAND',
@@ -102,6 +109,7 @@ crime_categories = {
         'THEFT OF IDENTITY',
         'CREDIT CARDS, FRAUD USE ($950.01 & OVER)',
         'DEFRAUDING INNKEEPER/THEFT OF SERVICES, $400 & UNDER',
+        'CREDIT CARDS, FRAUD USE ($950 & UNDER',
         'COUNTERFEIT',
         'DOCUMENT WORTHLESS ($200 & UNDER)',
         'CREDIT CARDS, FRAUD USE ($950 & UNDER)',
@@ -156,14 +164,15 @@ crime_categories = {
         'CONTEMPT OF COURT',
         'ABORTION/ILLEGAL',
         'REPLICA FIREARMS(SALE,DISPLAY,MANUFACTURE OR DISTRIBUTE)',
-        'INCITING A RIOT'
+        'INCITING A RIOT',
+        'DISRUPT SCHOOL'
     ],
     'Jugendkriminalität': [
         'CONTRIBUTING'
     ],
     'Tierschutzverbrechen': [
         'CRUELTY TO ANIMALS',
-        'BEASTIALITY, CRIME AGAINST NATURE SEXUAL ASLT WITH ANIM'
+        'BEASTIALITY, CRIME AGAINST NATURE SEXUAL ASSLT WITH ANIM'
     ],
     'Kindesmisshandlung': [
         'CHILD ENDANGERMENT/NEG.',
@@ -181,7 +190,8 @@ crime_categories = {
     ],
     'Sonstiges': [
         'OTHER MISCELLANEOUS CRIME',
-        'CONSPIRACY'
+        'CONSPIRACY',
+        'BRIBERY',
     ]
 }
 
@@ -190,4 +200,14 @@ def categorize_crime(description):
     for category, crimes in crime_categories.items():
         if description in crimes:
             return category
-    return 'Unbekannt'  # Für Verbrechen, die nicht im Dictionary vorhanden sind
+    return "Unbekannt"
+
+# if __name__ == "__main__":
+#     data = load_data()
+#     data['CrmCd.Desc'] = data['CrmCd.Desc'].replace(
+#         "nan", np.nan)
+
+#     data = data.dropna(subset=['CrmCd.Desc'])
+
+#     data['Crime Categorie'] = data['CrmCd.Desc'].apply(
+#         categorize_crime)

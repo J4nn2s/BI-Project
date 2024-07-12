@@ -102,7 +102,7 @@ if __name__ == "__main__":
     print(data_sample.head())
     print(data_sample.info())
 
-    data_sample = data_sample.sample(n=800000, random_state=RANDOM_SEED)
+    data_sample = data_sample.sample(n=700000, random_state=RANDOM_SEED)
     data_sample = format_data_frame(data_sample)
     data_sample = remove_outside_la(data_sample)
     logger.info(f"Grouping Categories")
@@ -118,6 +118,7 @@ if __name__ == "__main__":
                                           'Longitude',
                                           'SEASON',
                                           'WEEKDAY',
+                                          #   'DATE.OCC.Month',
                                           'DATE.OCC.Year',
                                           'Diff between OCC and Report',
                                           'RD',
@@ -138,6 +139,8 @@ if __name__ == "__main__":
     features = pd.get_dummies(features, columns=['Status'])
     features = pd.get_dummies(features, columns=['RD'])
 
+    print(features.info())
+
     logger.info('---------------------------------------------')
     logger.info("Data-Preparation finished ...")
     logger.info("Summary statistics after standardization:")
@@ -145,7 +148,7 @@ if __name__ == "__main__":
     logger.info(features.head())
 
     X_train, X_test, y_train, y_test = train_test_split(
-        features, target, test_size=0.2, random_state=RANDOM_SEED)
+        features, target, test_size=0.3, random_state=RANDOM_SEED)
 
     if tuning:
         logger.info("Starting Bayesian Optimization")
@@ -192,8 +195,8 @@ if __name__ == "__main__":
     class_names = target.unique().tolist()
 
     # max_depth kann optional angepasst werden
-    save_decision_tree_plot(best_model, feature_names,
-                            class_names, max_depth=4)
+    # save_decision_tree_plot(best_model, feature_names,
+    #                         class_names, max_depth=4)
 
     del X_train, y_train, target
     gc.collect()

@@ -463,21 +463,6 @@ if __name__ == "__main__":
 
     logger.info("Load Data ...")
     data: pd.DataFrame = load_data()
-    # unique_values = data['CrmCd.Desc'].unique()
-
-    # os.makedirs('Data', exist_ok=True)
-
-    # file_path = os.path.join('Data', 'unique_values.txt')
-    # with open(file_path, 'w') as f:
-    #     for value in unique_values:
-    #         f.write(f"{value}\n")
-
-    # logger.info(f"Unique values have been saved to '{file_path}'")
-
-    # # Save unique values to a text file
-    # with open('unique_values.txt', 'w') as f:
-    #     for value in unique_values:
-    #         f.write(f"{value}\n")
 
     for i in range(2):
         missing: bool = checking_missing_values(data)
