@@ -123,16 +123,40 @@ def get_season(month: int) -> str:
 #     first_two_digits = hour_str[:2]
 #     return first_two_digits
 
-def remove_outside_la(data: pd.DataFrame) -> pd.DataFrame:
-    lat_min, lat_max = 33.0, 36.0
-    long_min, long_max = -120.0, -116.0
+# def remove_outside_la(data: pd.DataFrame) -> pd.DataFrame:
+#    lat_min, lat_max = 33.0, 36.0
+#    long_min, long_max = -120.0, -116.0
+#
+#    # Filtere die Zeilen, die innerhalb des Bereichs liegen
+#    data_in_la = data[(data['Latitude'] >= lat_min) & (data['Latitude'] <= lat_max) &
+#                      (data['Longitude'] >= long_min) & (data['Longitude'] <= long_max)]
+#
+#    # Rückgabe des DataFrame, der nur Einträge innerhalb des angegebenen Bereichs enthält
+#    return data_in_la
 
-    # Filtere die Zeilen, die innerhalb des Bereichs liegen
-    data_in_la = data[(data['Latitude'] >= lat_min) & (data['Latitude'] <= lat_max) &
-                      (data['Longitude'] >= long_min) & (data['Longitude'] <= long_max)]
 
-    # Rückgabe des DataFrame, der nur Einträge innerhalb des angegebenen Bereichs enthält
-    return data_in_la
+def filter_outside_points(df: pd.DataFrame) -> pd.DataFrame:
+    # Definieren der Grenzen
+    north_bound = 34.337314
+    east_bound = -118.155348
+    south_bound = 33.704599
+    west_bound = -118.668225
+
+    # Filtern der Punkte außerhalb des gewünschten Bereichs
+    outside_points = df[
+        (df['Latitude'] > north_bound) | (df['Latitude'] < south_bound) |
+        (df['Longitude'] > east_bound) | (df['Longitude'] < west_bound)
+    ]
+
+    # Zählen der Punkte außerhalb des Bereichs
+    count_outside_points = outside_points.shape[0]
+    print(f"Anzahl der Punkte außerhalb des gewünschten Bereichs: {
+          count_outside_points}")
+
+    # Entfernen der Punkte außerhalb des Bereichs
+    data = df.drop(outside_points.index)
+
+    return data
 
 
 def checking_missing_coordinates(data: pd.DataFrame) -> bool:

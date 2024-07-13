@@ -14,6 +14,59 @@ import numpy as np
 import geopandas as gpd
 import matplotlib.pyplot as plt
 from shapely.geometry import Point
+from lib.crimeCategories import crime_categories, categorize_crime
+
+
+def plot_long_term_trends2(df: pd.DataFrame) -> None:
+    if 'Date.Rptd' not in df.columns:
+        logger.error("Column 'Date.Rptd' not found in DataFrame")
+        return
+
+    if df['Date.Rptd'].isnull().all():
+        logger.error("'Date.Rptd' column contains all null values")
+        return
+
+    try:
+        df['Date.Rptd'] = pd.to_datetime(df['Date.Rptd'])
+        df['Year'] = df['Date.Rptd'].dt.year
+
+        df['Category'] = 'Sonstiges'
+        for category, crimes in crime_categories.items():
+            df.loc[df['Crime Code Description'].isin(
+                crimes), 'Category'] = category
+
+        yearly_counts = df.groupby(
+            ['Year', 'Category']).size().unstack(fill_value=0)
+
+        if yearly_counts.empty:
+            logger.warning("Yearly counts are empty")
+            return
+
+        plt.figure(figsize=(12, 6))
+        sns.lineplot(data=yearly_counts, markers=True)
+        plt.title('Yearly Trends of Crimes by Category')
+        plt.xlabel('Year')
+        plt.ylabel('Number of Crimes')
+        plt.grid(True, linestyle='--', alpha=0.7)
+        plt.legend(title='Crime Category',
+                   bbox_to_anchor=(1.05, 1), loc='upper left')
+        plt.tight_layout()
+        os.makedirs('Plots', exist_ok=True)
+        plt.savefig('Plots/yearly_trends_by_category.png')
+        logger.info(
+            "Yearly trends saved as 'Plots/yearly_trends_by_category.png'")
+        plt.show()
+
+    except Exception as e:
+        logger.error(f"An error occurred while plotting long term trends: {e}")
+
+
+data_sample = load_data()
+data_sample = format_data_frame(data_sample)
+data_sample = remove_outside_la(data_sample)
+logger.info(f"Grouping Categories")
+data_sample['Crime Categorie'] = data_sample['CrmCd.Desc'].apply(
+    categorize_crime)
 
 
 def clean_coordinates(data: pd.DataFrame) -> pd.DataFrame:
@@ -579,3 +632,4 @@ if __name__ == "__main__":
     # plot_top5_crimes_weekday_analysis(data)
     # plot_crime_heatmap(data)
     # plot_crime_heatmap2(data_filtered)
+    plot_long_term_trends2(data_sample)

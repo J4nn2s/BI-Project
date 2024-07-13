@@ -103,9 +103,9 @@ if __name__ == "__main__":
 
     print(data.info())
 
-    data_sample = data.sample(n=200000, random_state=RANDOM_SEED)
+    data_sample = data.sample(n=800000, random_state=RANDOM_SEED)
     data_sample = format_data_frame(data_sample)
-    data_sample = remove_outside_la(data_sample)
+    data_sample = filter_outside_points(data_sample)
     logger.info(f"Grouping Categories")
     data_sample['Crime Categorie'] = data_sample['CrmCd.Desc'].apply(
         categorize_crime)
