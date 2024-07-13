@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
     # data_sample = data.sample(n=500000, random_state=RANDOM_SEED)
     data_sample = format_data_frame(data_sample)
-    data_sample = remove_outside_la(data_sample)
+    data_sample = filter_outside_points(data_sample)
 
     target = data_sample['Crm.Cd']
     features: pd.DataFrame = data_sample.drop(columns=["Crm.Cd"])

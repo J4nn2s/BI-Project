@@ -17,103 +17,6 @@ from shapely.geometry import Point
 from lib.crimeCategories import crime_categories, categorize_crime
 
 
-def plot_long_term_trends2(df: pd.DataFrame) -> None:
-    if 'Date.Rptd' not in df.columns:
-        logger.error("Column 'Date.Rptd' not found in DataFrame")
-        return
-
-    if df['Date.Rptd'].isnull().all():
-        logger.error("'Date.Rptd' column contains all null values")
-        return
-
-    try:
-        df['Date.Rptd'] = pd.to_datetime(df['Date.Rptd'])
-        df['Year'] = df['Date.Rptd'].dt.year
-
-        df['Category'] = 'Sonstiges'
-        for category, crimes in crime_categories.items():
-            df.loc[df['Crime Code Description'].isin(
-                crimes), 'Category'] = category
-
-        yearly_counts = df.groupby(
-            ['Year', 'Category']).size().unstack(fill_value=0)
-
-        if yearly_counts.empty:
-            logger.warning("Yearly counts are empty")
-            return
-
-        plt.figure(figsize=(12, 6))
-        sns.lineplot(data=yearly_counts, markers=True)
-        plt.title('Yearly Trends of Crimes by Category')
-        plt.xlabel('Year')
-        plt.ylabel('Number of Crimes')
-        plt.grid(True, linestyle='--', alpha=0.7)
-        plt.legend(title='Crime Category',
-                   bbox_to_anchor=(1.05, 1), loc='upper left')
-        plt.tight_layout()
-        os.makedirs('Plots', exist_ok=True)
-        plt.savefig('Plots/yearly_trends_by_category.png')
-        logger.info(
-            "Yearly trends saved as 'Plots/yearly_trends_by_category.png'")
-        plt.show()
-
-    except Exception as e:
-        logger.error(f"An error occurred while plotting long term trends: {e}")
-
-
-data_sample = load_data()
-data_sample = format_data_frame(data_sample)
-data_sample = remove_outside_la(data_sample)
-logger.info(f"Grouping Categories")
-data_sample['Crime Categorie'] = data_sample['CrmCd.Desc'].apply(
-    categorize_crime)
-
-
-def clean_coordinates(data: pd.DataFrame) -> pd.DataFrame:
-    data[['Latitude', 'Longitude']] = data['Location.1'].str.extract(
-        r'\(([^,]+), ([^)]+)\)').astype(float)
-
-    invalid_coords = (data['Latitude'] == 0.0) & (data['Longitude'] == 0.0)
-    data.loc[invalid_coords, ['Latitude', 'Longitude']] = [np.nan, np.nan]
-
-    area_coords_mean: pd.DataFrame = data.groupby(
-        'AREA')[['Latitude', 'Longitude']].transform('mean')
-    data[['Latitude', 'Longitude']] = data[[
-        'Latitude', 'Longitude']].fillna(area_coords_mean)
-
-    invalid_coords_after = data['Latitude'].isna() | data['Longitude'].isna()
-    count_invalid_coords = invalid_coords_after.sum()
-    print(f"Anzahl der Zeilen, die gelöscht werden: {count_invalid_coords}")
-
-    data = data.dropna(subset=['Latitude', 'Longitude'])
-    logger.info("Cleaned the coordinates")
-    return data
-
-
-def filter_outside_points(df: pd.DataFrame) -> pd.DataFrame:
-    # Definieren der Grenzen
-    north_bound = 34.337314
-    east_bound = -118.155348
-    south_bound = 33.704599
-    west_bound = -118.668225
-
-    # Filtern der Punkte außerhalb des gewünschten Bereichs
-    outside_points = df[
-        (df['Latitude'] > north_bound) | (df['Latitude'] < south_bound) |
-        (df['Longitude'] > east_bound) | (df['Longitude'] < west_bound)
-    ]
-
-    # Zählen der Punkte außerhalb des Bereichs
-    count_outside_points = outside_points.shape[0]
-    print(f"Anzahl der Punkte außerhalb des gewünschten Bereichs: {
-          count_outside_points}")
-
-    # Entfernen der Punkte außerhalb des Bereichs
-    df_filtered = df.drop(outside_points.index)
-
-    return df_filtered
-
-
 def plot_crime_heatmap2(df: pd.DataFrame) -> None:
     if 'Latitude' not in df.columns or 'Longitude' not in df.columns:
         logger.error(
@@ -632,4 +535,3 @@ if __name__ == "__main__":
     # plot_top5_crimes_weekday_analysis(data)
     # plot_crime_heatmap(data)
     # plot_crime_heatmap2(data_filtered)
-    plot_long_term_trends2(data_sample)

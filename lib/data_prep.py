@@ -123,17 +123,6 @@ def get_season(month: int) -> str:
 #     first_two_digits = hour_str[:2]
 #     return first_two_digits
 
-# def remove_outside_la(data: pd.DataFrame) -> pd.DataFrame:
-#    lat_min, lat_max = 33.0, 36.0
-#    long_min, long_max = -120.0, -116.0
-#
-#    # Filtere die Zeilen, die innerhalb des Bereichs liegen
-#    data_in_la = data[(data['Latitude'] >= lat_min) & (data['Latitude'] <= lat_max) &
-#                      (data['Longitude'] >= long_min) & (data['Longitude'] <= long_max)]
-#
-#    # Rückgabe des DataFrame, der nur Einträge innerhalb des angegebenen Bereichs enthält
-#    return data_in_la
-
 
 def filter_outside_points(df: pd.DataFrame) -> pd.DataFrame:
     # Definieren der Grenzen
