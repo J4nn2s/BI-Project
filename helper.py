@@ -1,3 +1,4 @@
+import re
 import pandas as pd
 
 # Beispiel-DataFrame
@@ -22,3 +23,25 @@ for col in df.select_dtypes(include=['bool']).columns:
 print("\nNachher DataFrame:")
 print(df.dtypes)
 print(df.memory_usage(deep=True))
+
+
+# Beispiel-Datenframe erstellen
+data = {'Address': ['1100 Oakstreet BL', '1234 Elmstreet DR',
+                    '5678 Maplestreet BL', '1110 Oakstreet']}
+df = pd.DataFrame(data)
+
+# Funktion, um die letzten zwei Buchstaben einer Zeichenkette zu extrahieren, falls vorhanden
+
+
+def extract_last_two_letters(address):
+    match = re.search(r'( [A-Za-z]{2})$', address)
+    if match:
+        return match.group(1)
+    return None
+
+
+# Diese Funktion auf die Spalte 'Address' anwenden und das Ergebnis in einer neuen Spalte speichern
+df['LastTwoChars'] = df['Address'].apply(extract_last_two_letters)
+
+# Den modifizierten DataFrame anzeigen
+print(df)

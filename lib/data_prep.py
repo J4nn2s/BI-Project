@@ -4,6 +4,7 @@ import zipfile
 from io import BytesIO
 import numpy as np
 from loguru import logger
+import re
 
 
 def load_data() -> pd.DataFrame:
@@ -79,6 +80,8 @@ def format_data_frame(data: pd.DataFrame) -> pd.DataFrame:
     data['Diff between OCC and Report'] = (
         data['Date.Rptd'] - data['DATE.OCC']).dt.days
 
+    data["Street Category"] = data["LOCATION"].apply(
+        extract_street_category)
     data = clean_coordinates(data)
     return data
 
@@ -157,6 +160,13 @@ def checking_missing_coordinates(data: pd.DataFrame) -> bool:
     return missing_latitude or missing_longitude
 
 
+def extract_street_category(address):
+    match = re.search(r'( [A-Z]{2})$', address)
+    if match:
+        return match.group(1)
+    return None
+
+
 if __name__ == "__main__":
 
     import os
@@ -169,6 +179,8 @@ if __name__ == "__main__":
     data[['Latitude', 'Longitude']] = data['Location.1'].str.extract(
         r'\(([^,]+), ([^)]+)\)').astype(float)
 
+    data = format_data_frame(data)
+
     print(data.head())
     print(data.info())
     print('Fehlende Werte ?')
@@ -178,3 +190,9 @@ if __name__ == "__main__":
     print('Fehlende Werte ?')
 
     print(checking_missing_coordinates(data))
+
+    unique_street_category: int = data["Street Category"].nunique()
+
+    print(f"Straßen Arten : {unique_street_category}")
+
+    print(data["Street Category"].unique())

@@ -1,8 +1,9 @@
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split, cross_val_score, cross_validate, StratifiedKFold, KFold
 from sklearn.tree import DecisionTreeClassifier, plot_tree, export_graphviz
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, log_loss
+from sklearn.metrics import classification_report, make_scorer, precision_score, recall_score, f1_score, confusion_matrix, accuracy_score, log_loss
+
 from sklearn.preprocessing import StandardScaler
 from loguru import logger
 from lib.data_prep import *
@@ -13,6 +14,7 @@ import optuna
 import matplotlib.pyplot as plt
 import re
 from lib.crimeCategories import crime_categories, categorize_crime
+import seaborn as sns
 
 
 def replace_text(obj):
@@ -70,12 +72,13 @@ RANDOM_SEED = random.randint(1, 10)  # können wir final setten zum Schluss
 
 def bayesian_optimization(trial, X_train, y_train):
     max_depth = trial.suggest_int('max_depth', 10, 40)
-    min_samples_split = trial.suggest_int('min_samples_split', 2, 20)
-    min_samples_leaf = trial.suggest_int('min_samples_leaf', 1, 10)
+    min_samples_split = trial.suggest_int('min_samples_split', 5, 200)
+    min_samples_leaf = trial.suggest_int('min_samples_leaf', 5, 100)
     max_features = trial.suggest_categorical(
-        'max_features', [None, 'sqrt', 'log2'])
+        'max_features', ['sqrt', 'log2', None])
     criterion = trial.suggest_categorical(
         'criterion', ['gini', 'entropy', 'log_loss'])
+    ccp_alpha = trial.suggest_float('ccp_alpha', 0.0, 0.05)
 
     clf = DecisionTreeClassifier(
         max_depth=max_depth,
@@ -83,6 +86,7 @@ def bayesian_optimization(trial, X_train, y_train):
         min_samples_leaf=min_samples_leaf,
         max_features=max_features,
         criterion=criterion,
+        ccp_alpha=ccp_alpha,
         random_state=RANDOM_SEED
     )
 
@@ -96,6 +100,12 @@ if __name__ == "__main__":
 
     if start == "Y" or start == "y":
         tuning: bool = True
+
+    eval: bool = False
+
+    start_eval: str = input("Mit Cross-Val Evaluation? (Y/y) ")
+    if start_eval == "Y" or start_eval == "y":
+        eval = True
 
     data_sample = load_data()
 
@@ -124,6 +134,7 @@ if __name__ == "__main__":
                                           'DATE.OCC.Year',
                                           'Diff between OCC and Report',
                                           #   'RD',
+                                          #   'Street Category',
                                           'Status']]
 
     target = data_sample['Crime Categorie']
@@ -140,6 +151,7 @@ if __name__ == "__main__":
     features = pd.get_dummies(features, columns=['WEEKDAY'])
     features = pd.get_dummies(features, columns=['DATE.OCC.Month'])
     features = pd.get_dummies(features, columns=['Status'])
+    # features = pd.get_dummies(features, columns=['Street Category'])
     # features = pd.get_dummies(features, columns=['RD'])
 
     print(features.info())
@@ -157,7 +169,7 @@ if __name__ == "__main__":
         logger.info("Starting Bayesian Optimization")
         study = optuna.create_study(direction='maximize')
         study.optimize(lambda trial: bayesian_optimization(
-            trial, X_train, y_train), n_trials=100, n_jobs=1, show_progress_bar=True)
+            trial, X_train, y_train), n_trials=30, n_jobs=-1, show_progress_bar=True)
 
         best_params = study.best_params
         logger.info(f"Best parameters found: {best_params}")
@@ -174,53 +186,119 @@ if __name__ == "__main__":
 
     if not tuning:
         best_model = DecisionTreeClassifier(
-            max_depth=13,
-            min_samples_split=13,
-            min_samples_leaf=2,
+            max_depth=14,
+            min_samples_split=20,
+            min_samples_leaf=9,
             max_features=None,
             criterion="gini",
             random_state=RANDOM_SEED)
 
     ############################################################
+   # altes Tuning
+    # :100 - Best parameters found: {'max_depth': 13,
+    # 'min_samples_split': 13,
+    # 'min_samples_leaf': 2,
+    #     'max_features': None,
+    #     'criterion': 'gini'}
 
     '''
-    :100 - Best parameters found: {'max_depth': 13,
-    'min_samples_split': 13,
-    'min_samples_leaf': 2,
-        'max_features': None,
-        'criterion': 'gini'}
+    neues Tuning
+    Best parameters found: {
+    'max_depth': 14,
+      'min_samples_split': 20,
+        'min_samples_leaf': 9,
+          'max_features': None,
+      'criterion': 'gini'}
+    '''
+
+    '''
+    Besondere Beachtung wegen Overfitting -> komische Ergebnisse
+    {'max_depth': 13,
+    'min_samples_split': 52,
+    'min_samples_leaf': 88,
+    'max_features': None,
+    'criterion': 'entropy',
+    'ccp_alpha': 0.003722041938940135
+    }
+    
+    
     '''
     ############################################################
 
     # Modell trainieren
-    best_model.fit(X_train, y_train)
-    feature_names = features.columns.tolist()
-    class_names = target.unique().tolist()
+    if eval:
+        logger.info("Doing a precise evaluation of the model")
+        scoring = {
+            'accuracy': make_scorer(accuracy_score),
+            'precision': make_scorer(precision_score, average='weighted'),
+            'recall': make_scorer(recall_score, average='weighted'),
+            'f1': make_scorer(f1_score, average='weighted'),
+            'log_loss': make_scorer(log_loss, needs_proba=True)
+        }
 
-    # max_depth kann optional angepasst werden
-    # save_decision_tree_plot(best_model, feature_names,
-    #                         class_names, max_depth=4)
+        # Durchführung der Cross-Validation
+        # Verwendung von StratifiedKFold für Cross-Validation
+        skf = StratifiedKFold(n_splits=10, shuffle=True,
+                              random_state=RANDOM_SEED)
 
-    del X_train, y_train, target
-    gc.collect()
+        # Durchführung der Cross-Validation
+        cv_results = cross_validate(
+            best_model, features, target, cv=skf, scoring=scoring, return_train_score=False)
 
-    y_pred = best_model.predict(X_test)
-    y_pred_prob_tree = best_model.predict_proba(X_test)
+        for metric in scoring.keys():
+            mean_score = np.mean(cv_results[f'test_{metric}'])
+            std_score = np.std(cv_results[f'test_{metric}'])
+            logger.info(
+                f"{metric.capitalize()} - Mean: {mean_score:.4f}, Std: {std_score:.4f}")
 
-    logger.info("Classification Report:")
-    logger.info(classification_report(y_test, y_pred))
+        sns.set(style="whitegrid")
+        plt.figure(figsize=(10, 6))
+        folds = np.arange(1, 11)
+        accuracies = cv_results['test_accuracy']
 
-    feature_importances = pd.DataFrame(best_model.feature_importances_,
-                                       index=features.columns,
-                                       columns=['importance']).sort_values('importance', ascending=False)
-    logger.info(f"Feature Importances:\n {feature_importances}")
+        plt.plot(folds, accuracies, marker='o',
+                 linestyle='-', color='b', label='Accuracy')
+        plt.fill_between(folds, accuracies - np.std(accuracies),
+                         accuracies + np.std(accuracies), color='b', alpha=0.2)
 
-    # Konfusionsmatrix
-    logger.info("Confusion Matrix:")
-    logger.info(confusion_matrix(y_test, y_pred))
-    accuracy = accuracy_score(y_test, y_pred)
+        plt.title('Cross-Validation Accuracy per Fold', fontsize=16)
+        plt.xlabel('Fold', fontsize=14)
+        plt.ylabel('Accuracy', fontsize=14)
+        plt.xticks(folds)
+        plt.legend()
+        os.makedirs('Plots', exist_ok=True)
+        plt.savefig('Plots/CV_Tree.png')
+        logger.info('CV Tree Results saved')
 
-    # Ausgabe der Accuracy
-    logger.success(f"Accuracy: {accuracy:.4f}")
-    log_loss_tree = log_loss(y_test, y_pred_prob_tree)
-    logger.success(f"Decision Tree Log Loss: {log_loss_tree}")
+    if not eval:
+        best_model.fit(X_train, y_train)
+        feature_names = features.columns.tolist()
+        class_names = target.unique().tolist()
+
+        # max_depth kann optional angepasst werden
+        # save_decision_tree_plot(best_model, feature_names,
+        #                         class_names, max_depth=4)
+
+        del X_train, y_train, target
+        gc.collect()
+
+        y_pred = best_model.predict(X_test)
+        y_pred_prob_tree = best_model.predict_proba(X_test)
+
+        logger.info("Classification Report:")
+        logger.info(classification_report(y_test, y_pred))
+
+        feature_importances = pd.DataFrame(best_model.feature_importances_,
+                                           index=features.columns,
+                                           columns=['importance']).sort_values('importance', ascending=False)
+        logger.info(f"Feature Importances:\n {feature_importances}")
+
+        # Konfusionsmatrix
+        logger.info("Confusion Matrix:")
+        logger.info(confusion_matrix(y_test, y_pred))
+        accuracy = accuracy_score(y_test, y_pred)
+
+        # Ausgabe der Accuracy
+        logger.success(f"Accuracy: {accuracy:.4f}")
+        log_loss_tree = log_loss(y_test, y_pred_prob_tree)
+        logger.success(f"Decision Tree Log Loss: {log_loss_tree}")

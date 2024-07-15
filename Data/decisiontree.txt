@@ -1,0 +1,5 @@
+Accuracy - Mean: 0.5169, Std: 0.0014
+Precision - Mean: 0.4734, Std: 0.0025
+Recall - Mean: 0.5169, Std: 0.0014
+F1 - Mean: 0.4751, Std: 0.0013
+Log_loss - Mean: 1.6534, Std: 0.0082
