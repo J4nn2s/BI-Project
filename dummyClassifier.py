@@ -5,6 +5,7 @@ from lib.data_prep import *
 from sklearn.preprocessing import StandardScaler
 from collections import defaultdict
 from sklearn.base import BaseEstimator, ClassifierMixin
+from lib.crimeCategories import crime_categories, categorize_crime
 
 
 class CustomDummyClassifier(BaseEstimator, ClassifierMixin):
@@ -33,9 +34,12 @@ if __name__ == "__main__":
     # data_sample = data.sample(n=500000, random_state=RANDOM_SEED)
     data_sample = format_data_frame(data_sample)
     data_sample = filter_outside_points(data_sample)
+    logger.info(f"Grouping Categories")
+    data_sample['Crime Categorie'] = data_sample['CrmCd.Desc'].apply(
+        categorize_crime)
 
-    target = data_sample['Crm.Cd']
-    features: pd.DataFrame = data_sample.drop(columns=["Crm.Cd"])
+    target = data_sample['Crime Categorie']
+    features: pd.DataFrame = data_sample.drop(columns=["Crime Categorie"])
     features["HOUR"] = features["TIME.OCC"].astype(str).str[0:2]
 
     logger.info('---------------------------------------------')
@@ -45,7 +49,7 @@ if __name__ == "__main__":
     logger.info(features.info())
 
     X_train, X_test, y_train, y_test = train_test_split(
-        features, target, test_size=0.2, random_state=RANDOM_SEED)
+        features, target, test_size=0.3, random_state=RANDOM_SEED)
 
     logger.info("Training the DummyClassifier")
 
@@ -55,15 +59,15 @@ if __name__ == "__main__":
     # Vorhersagen treffen
     y_pred_dummy = dummy_clf.predict(X_test)
 
-    y_pred_proba_dummy = dummy_clf.predict_proba(X_test)
+    # y_pred_proba_dummy = dummy_clf.predict_proba(X_test)
 
     # Genauigkeit berechnen
     accuracy_dummy = accuracy_score(y_test, y_pred_dummy)
     logger.success(f"Dummy Classifier Accuracy: {accuracy_dummy}")
 
     # log_loss berechnen
-    log_loss_dummy = log_loss(y_test, y_pred_proba_dummy)
-    logger.success(f"Dummy Classifier Log Loss: {log_loss_dummy}")
+    # log_loss_dummy = log_loss(y_test, y_pred_proba_dummy)
+    # logger.success(f"Dummy Classifier Log Loss: {log_loss_dummy}")
 
 
 '''

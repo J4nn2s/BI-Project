@@ -23,29 +23,37 @@ import seaborn as sns
 
 
 RANDOM_SEED = 42
-
 models = {
-    "Decision Tree": DecisionTreeClassifier(
-        max_depth=14,
-        min_samples_split=20,
-        min_samples_leaf=9,
-        max_features=None,
-        criterion="gini",
-        random_state=RANDOM_SEED),
-    # "Random Forest": RandomForestClassifier(n_estimators=50,
-    #                                         min_samples_leaf=10,
-    #                                         min_samples_split=10,
-    #                                         max_features=None,
-    #                                         max_depth=33,
-    #                                         max_leaf_nodes=230,
-    #                                         random_state=RANDOM_SEED,
-    #                                         verbose=2,
-    #                                         bootstrap=True,
-    #                                         oob_score=True,
-    #                                         class_weight=None,
-    #                                         criterion="gini",
-    #                                         n_jobs=4)
+    # "Decision Tree": DecisionTreeClassifier(
+    #     max_depth=14,
+    #     min_samples_split=20,
+    #     min_samples_leaf=9,
+    #     max_features=None,
+    #     criterion="gini",
+    #     random_state=RANDOM_SEED),
+    "Random Forest": RandomForestClassifier(n_estimators=50,
+                                            min_samples_leaf=35,
+                                            min_samples_split=199,
+                                            max_features=None,
+                                            max_depth=39,
+                                            max_leaf_nodes=230,
+                                            random_state=RANDOM_SEED,
+                                            verbose=2,
+                                            bootstrap=True,
+                                            oob_score=True,
+                                            class_weight=None,
+                                            criterion="gini",
+                                            n_jobs=4)
 }
+# Best parameters: {
+# 'n_estimators': 36,
+#  'max_depth': 39,
+#  'max_leaf_nodes': 180,
+#  'min_samples_split': 199,
+#  'min_samples_leaf': 35,
+#  'max_features': None,
+#  'class_weight': None,
+#  'criterion': 'gini'}
 
 
 def plot_learning_curve_no_cv(estimator, title, features, target, train_sizes=np.linspace(.01, 1.0, 10)):
@@ -63,6 +71,7 @@ def plot_learning_curve_no_cv(estimator, title, features, target, train_sizes=np
     test_scores_std = np.std(test_scores, axis=1)
 
     plt.grid()
+    plt.ylim(0, 1)  # Set the y-axis range from 0 to 1
 
     plt.fill_between(train_sizes, train_scores_mean - train_scores_std,
                      train_scores_mean + train_scores_std, alpha=0.1,
@@ -82,7 +91,7 @@ def plot_learning_curve_no_cv(estimator, title, features, target, train_sizes=np
                 title} saved as Plots/Learning_Curve_{model_name_clean}.png')
 
 
-def plot_learning_curve(estimator, title, features, target, cv, n_jobs=1, train_sizes=np.linspace(.01, 1.0, 10)):
+def plot_learning_curve(estimator, title, features, target, cv=10, n_jobs=-1, train_sizes=np.linspace(.01, 1.0, 10)):
     plt.figure(figsize=(10, 6))
     plt.title(title)
     plt.xlabel("Training examples")
@@ -97,6 +106,7 @@ def plot_learning_curve(estimator, title, features, target, cv, n_jobs=1, train_
     test_scores_std = np.std(test_scores, axis=1)
 
     plt.grid()
+    plt.ylim(0, 1)  # Set the y-axis range from 0 to 1
 
     plt.fill_between(train_sizes, train_scores_mean - train_scores_std,
                      train_scores_mean + train_scores_std, alpha=0.1,
@@ -122,7 +132,7 @@ if __name__ == "__main__":
     print(data_sample.head())
     print(data_sample.info())
 
-    # data_sample = data_sample.sample(n=700000, random_state=RANDOM_SEED)
+    data_sample = data_sample.sample(n=800000, random_state=RANDOM_SEED)
     data_sample = format_data_frame(data_sample)
 
     data_sample = filter_outside_points(data_sample)
@@ -176,9 +186,11 @@ if __name__ == "__main__":
         logger.info(f"{model_name}")
 
         if model_name == "Decision Tree":
+            plot_learning_curve(model, f'Learning Curve for {
+                model_name}', X_train, y_train, train_sizes=train_sizes)
 
-            plot_learning_curve(model, f"Learning Curve for {model_name}", features, target, cv=10, train_sizes=train_sizes
-                                )
+            # plot_learning_curve(model, f"Learning Curve for {model_name}", features, target, cv=10, train_sizes=train_sizes
+            # )
 
         else:
             plot_learning_curve_no_cv(model, f'Learning Curve for {

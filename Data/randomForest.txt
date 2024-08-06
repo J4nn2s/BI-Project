@@ -1,11 +1,90 @@
 Mit bootstrap und max feature und oobscore
 
-Accuracy - Mean: 0.5187, Std: 0.0011
-Precision - Mean: 0.4467, Std: 0.0010
-Recall - Mean: 0.5187, Std: 0.0011
-F1 - Mean: 0.4736, Std: 0.0010
-Log_loss - Mean: 1.3112, Std: 0.0014
+
+Accuracy  - Mean: 0.5188, Std: 0.0003
+Precision - Mean: 0.4467, Std: 0.0002
+Recall    - Mean: 0.5188, Std: 0.0003
+F1        - Mean: 0.4738, Std: 0.0005
+Log_loss  - Mean: 1.3115, Std: 0.0003
+
 CV Forest  Results saved
 OOB Score: 0.5185
 
 
+Accuracy: 0.5200245498220432
+Random Forest Log Loss: 1.3085048172367695
+
+
+Accuracy  - Mean: 0.5212, Std: 0.0006
+Precision - Mean: 0.4484, Std: 0.0002
+Recall    - Mean: 0.5212, Std: 0.0006
+F1        - Mean: 0.4758, Std: 0.0006
+Log_loss  - Mean: 1.3072, Std: 0.0003
+
+
+
+
+
+
+Status_IC                      0.314130
+Diff between OCC and Report    0.310576
+TIME.OCC                       0.173090
+DATE.OCC.Year_2016             0.073046
+Longitude                      0.053205
+Latitude                       0.038593
+Status_AO                      0.008849
+AREA_12                        0.007152
+AREA_18                        0.005193
+AREA_14                        0.003543
+Status_AA                      0.002992
+AREA_19                        0.001501
+AREA_1                         0.001490
+WEEKDAY_Sunday                 0.001083
+AREA_3                         0.000916
+WEEKDAY_Saturday               0.000770
+AREA_2                         0.000697
+AREA_5                         0.000673
+AREA_7                         0.000581
+AREA_20                        0.000396
+AREA_8                         0.000210
+AREA_17                        0.000205
+AREA_9                         0.000187
+Status_JO                      0.000166
+DATE.OCC.Year_2012             0.000161
+AREA_10                        0.000134
+AREA_13                        0.000094
+DATE.OCC.Year_2015             0.000090
+DATE.OCC.Year_2014             0.000065
+DATE.OCC.Year_2013             0.000055
+AREA_16                        0.000024
+AREA_6                         0.000021
+WEEKDAY_Monday                 0.000019
+AREA_15                        0.000016
+WEEKDAY_Tuesday                0.000015
+AREA_11                        0.000014
+AREA_21                        0.000011
+DATE.OCC.Month_11              0.000011
+SEASON_Herbst                  0.000009
+Status_JA                      0.000005
+DATE.OCC.Month_1               0.000003
+SEASON_Frühling                0.000002
+DATE.OCC.Month_2               0.000002
+AREA_4                         0.000002
+SEASON_Winter                  0.000000
+SEASON_Sommer                  0.000000
+DATE.OCC.Month_12              0.000000
+DATE.OCC.Month_10              0.000000
+DATE.OCC.Month_9               0.000000
+DATE.OCC.Month_8               0.000000
+DATE.OCC.Month_6               0.000000
+DATE.OCC.Month_7               0.000000
+DATE.OCC.Month_5               0.000000
+DATE.OCC.Month_4               0.000000
+DATE.OCC.Month_3               0.000000
+WEEKDAY_Wednesday              0.000000
+WEEKDAY_Thursday               0.000000
+WEEKDAY_Friday                 0.000000
+Status_19                      0.000000
+Status_CC                      0.000000
+Status_TH                      0.000000
+Status_UNK                     0.000000
