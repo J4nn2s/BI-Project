@@ -5,9 +5,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split, cross_val_score, cross_validate, StratifiedKFold, KFold
+from sklearn.model_selection import (
+    train_test_split,
+    cross_val_score,
+    cross_validate,
+    StratifiedKFold,
+    KFold,
+)
 from sklearn.tree import DecisionTreeClassifier, plot_tree, export_graphviz
-from sklearn.metrics import classification_report, make_scorer, precision_score, recall_score, f1_score, confusion_matrix, accuracy_score, log_loss
+from sklearn.metrics import (
+    classification_report,
+    make_scorer,
+    precision_score,
+    recall_score,
+    f1_score,
+    confusion_matrix,
+    accuracy_score,
+    log_loss,
+)
 
 from sklearn.preprocessing import StandardScaler
 from loguru import logger
@@ -23,28 +38,31 @@ import seaborn as sns
 
 
 RANDOM_SEED = 42
+
 models = {
-    # "Decision Tree": DecisionTreeClassifier(
-    #     max_depth=14,
-    #     min_samples_split=20,
-    #     min_samples_leaf=9,
-    #     max_features=None,
-    #     criterion="gini",
-    #     random_state=RANDOM_SEED),
-    "Random Forest": RandomForestClassifier(n_estimators=50,
-                                            min_samples_leaf=35,
-                                            min_samples_split=199,
-                                            max_features=None,
-                                            max_depth=39,
-                                            max_leaf_nodes=230,
-                                            random_state=RANDOM_SEED,
-                                            verbose=2,
-                                            bootstrap=True,
-                                            oob_score=True,
-                                            class_weight=None,
-                                            criterion="gini",
-                                            n_jobs=4)
+    "Decision Tree": DecisionTreeClassifier(
+        max_depth=15,
+        # min_samples_split=20,
+        # min_samples_leaf=9,
+        # max_features=None,
+        # criterion="gini",
+        random_state=RANDOM_SEED
+    ),
+    #     "Random Forest": RandomForestClassifier(n_estimators=50,
+    #                                             min_samples_leaf=35,
+    #                                             min_samples_split=199,
+    #                                             max_features=None,
+    #                                             max_depth=39,
+    #                                             max_leaf_nodes=230,
+    #                                             random_state=RANDOM_SEED,
+    #                                             verbose=2,
+    #                                             bootstrap=True,
+    #                                             oob_score=True,
+    #                                             class_weight=None,
+    #                                             criterion="gini",
+    #                                             n_jobs=4)
 }
+
 # Best parameters: {
 # 'n_estimators': 36,
 #  'max_depth': 39,
@@ -56,14 +74,22 @@ models = {
 #  'criterion': 'gini'}
 
 
-def plot_learning_curve_no_cv(estimator, title, features, target, train_sizes=np.linspace(.01, 1.0, 10)):
+def plot_learning_curve_no_cv(
+    estimator, title, features, target, train_sizes=np.linspace(0.01, 1.0, 10)
+):
     plt.figure(figsize=(10, 6))
     plt.title(title)
     plt.xlabel("Training examples")
     plt.ylabel("Score")
 
     train_sizes, train_scores, test_scores = learning_curve(
-        estimator, features, target, cv=None, train_sizes=train_sizes, random_state=RANDOM_SEED)
+        estimator,
+        features,
+        target,
+        cv=None,
+        train_sizes=train_sizes,
+        random_state=RANDOM_SEED,
+    )
 
     train_scores_mean = np.mean(train_scores, axis=1)
     train_scores_std = np.std(train_scores, axis=1)
@@ -73,32 +99,58 @@ def plot_learning_curve_no_cv(estimator, title, features, target, train_sizes=np
     plt.grid()
     plt.ylim(0, 1)  # Set the y-axis range from 0 to 1
 
-    plt.fill_between(train_sizes, train_scores_mean - train_scores_std,
-                     train_scores_mean + train_scores_std, alpha=0.1,
-                     color="r")
-    plt.fill_between(train_sizes, test_scores_mean - test_scores_std,
-                     test_scores_mean + test_scores_std, alpha=0.1, color="g")
-    plt.plot(train_sizes, train_scores_mean, 'o-', color="r",
-             label="Training score")
-    plt.plot(train_sizes, test_scores_mean, 'o-', color="g",
-             label="Test score")
+    plt.fill_between(
+        train_sizes,
+        train_scores_mean - train_scores_std,
+        train_scores_mean + train_scores_std,
+        alpha=0.1,
+        color="r",
+    )
+    plt.fill_between(
+        train_sizes,
+        test_scores_mean - test_scores_std,
+        test_scores_mean + test_scores_std,
+        alpha=0.1,
+        color="g",
+    )
+    plt.plot(train_sizes, train_scores_mean, "o-",
+             color="r", label="Training score")
+    plt.plot(train_sizes, test_scores_mean,
+             "o-", color="g", label="Test score")
 
     plt.legend(loc="best")
-    os.makedirs('Plots', exist_ok=True)
-    model_name_clean = re.sub(r'\W+', '', title)
-    plt.savefig(f'Plots/Learning_Curve_{model_name_clean}.png')
-    logger.info(f'Learning Curve for {
-                title} saved as Plots/Learning_Curve_{model_name_clean}.png')
+    os.makedirs("Plots", exist_ok=True)
+    model_name_clean = re.sub(r"\W+", "", title)
+    plt.savefig(f"Plots/Learning_Curve_{model_name_clean}.png")
+    logger.info(
+        f"Learning Curve for {
+            title} saved as Plots/Learning_Curve_{model_name_clean}.png"
+    )
 
 
-def plot_learning_curve(estimator, title, features, target, cv=10, n_jobs=-1, train_sizes=np.linspace(.01, 1.0, 10)):
+def plot_learning_curve(
+    estimator,
+    title,
+    features,
+    target,
+    cv=10,
+    n_jobs=-1,
+    train_sizes=np.linspace(0.01, 1.0, 10),
+):
     plt.figure(figsize=(10, 6))
     plt.title(title)
     plt.xlabel("Training examples")
     plt.ylabel("Score")
 
     train_sizes, train_scores, test_scores = learning_curve(
-        estimator, features, target, cv=cv, n_jobs=n_jobs, train_sizes=train_sizes, random_state=RANDOM_SEED)
+        estimator,
+        features,
+        target,
+        cv=cv,
+        n_jobs=n_jobs,
+        train_sizes=train_sizes,
+        random_state=RANDOM_SEED,
+    )
 
     train_scores_mean = np.mean(train_scores, axis=1)
     train_scores_std = np.std(train_scores, axis=1)
@@ -108,22 +160,34 @@ def plot_learning_curve(estimator, title, features, target, cv=10, n_jobs=-1, tr
     plt.grid()
     plt.ylim(0, 1)  # Set the y-axis range from 0 to 1
 
-    plt.fill_between(train_sizes, train_scores_mean - train_scores_std,
-                     train_scores_mean + train_scores_std, alpha=0.1,
-                     color="r")
-    plt.fill_between(train_sizes, test_scores_mean - test_scores_std,
-                     test_scores_mean + test_scores_std, alpha=0.1, color="g")
-    plt.plot(train_sizes, train_scores_mean, 'o-', color="r",
-             label="Training score")
-    plt.plot(train_sizes, test_scores_mean, 'o-', color="g",
-             label="Cross-validation score")
+    plt.fill_between(
+        train_sizes,
+        train_scores_mean - train_scores_std,
+        train_scores_mean + train_scores_std,
+        alpha=0.1,
+        color="r",
+    )
+    plt.fill_between(
+        train_sizes,
+        test_scores_mean - test_scores_std,
+        test_scores_mean + test_scores_std,
+        alpha=0.1,
+        color="g",
+    )
+    plt.plot(train_sizes, train_scores_mean, "o-",
+             color="r", label="Training score")
+    plt.plot(
+        train_sizes, test_scores_mean, "o-", color="g", label="Cross-validation score"
+    )
 
     plt.legend(loc="best")
-    os.makedirs('Plots', exist_ok=True)
-    model_name_clean = re.sub(r'\W+', '', title)
-    plt.savefig(f'Plots/Learning_Curve_{model_name_clean}.png')
-    logger.info(f'Learning Curve for {
-                title} saved as Plots/Learning_Curve_{model_name_clean}.png')
+    os.makedirs("Plots", exist_ok=True)
+    model_name_clean = re.sub(r"\W+", "", title)
+    plt.savefig(f"Plots/Learning_Curve_{model_name_clean}.png")
+    logger.info(
+        f"Learning Curve for {
+            title} saved as Plots/Learning_Curve_{model_name_clean}.png"
+    )
 
 
 if __name__ == "__main__":
@@ -132,49 +196,57 @@ if __name__ == "__main__":
     print(data_sample.head())
     print(data_sample.info())
 
-    data_sample = data_sample.sample(n=800000, random_state=RANDOM_SEED)
+    data_sample = data_sample.sample(n=500000, random_state=RANDOM_SEED)
     data_sample = format_data_frame(data_sample)
 
     data_sample = filter_outside_points(data_sample)
 
     logger.info(f"Grouping Categories")
-    data_sample['Crime Categorie'] = data_sample['CrmCd.Desc'].apply(
+    data_sample["Crime Categorie"] = data_sample["CrmCd.Desc"].apply(
         categorize_crime)
 
     # del data
     # gc.collect()
 
-    features: pd.DataFrame = data_sample[['AREA',
-                                          'TIME.OCC',
-                                          'Latitude',
-                                          'Longitude',
-                                          'SEASON',
-                                          'WEEKDAY',
-                                          'DATE.OCC.Month',
-                                          'DATE.OCC.Year',
-                                          'Diff between OCC and Report',
-                                          #   'RD',
-                                          #   'Street Category',
-                                          'Status']]
+    features: pd.DataFrame = data_sample[
+        [
+            "AREA",
+            "TIME.OCC",
+            "Latitude",
+            "Longitude",
+            "SEASON",
+            "WEEKDAY",
+            "DATE.OCC.Month",
+            "RD",
+            "Street Category",
+            #   'Status',
+            #   'DATE.OCC.Year',
+            #   'Diff between OCC and Report',
+        ]
+    ]
 
-    target = data_sample['Crime Categorie']
+    target = data_sample["Crime Categorie"]
 
     scaler = StandardScaler()
-    scaled_features = scaler.fit_transform(
-        features[['Latitude', 'Longitude']])
+    scaled_features = scaler.fit_transform(features[["Latitude", "Longitude"]])
 
-    features.loc[:, ['Latitude', 'Longitude']] = scaled_features
+    features.loc[:, ["Latitude", "Longitude"]] = scaled_features
 
-    features = pd.get_dummies(features, columns=['AREA'])
-    features = pd.get_dummies(features, columns=['SEASON'])
-    features = pd.get_dummies(features, columns=['DATE.OCC.Year'])
-    features = pd.get_dummies(features, columns=['WEEKDAY'])
-    features = pd.get_dummies(features, columns=['DATE.OCC.Month'])
-    features = pd.get_dummies(features, columns=['Status'])
+    features = pd.get_dummies(features, columns=["AREA"])
+    features = pd.get_dummies(features, columns=["SEASON"])
+    features = pd.get_dummies(features, columns=["WEEKDAY"])
+    features = pd.get_dummies(features, columns=["DATE.OCC.Month"])
+    features = pd.get_dummies(features, columns=["Street Category"])
+    features = pd.get_dummies(features, columns=["RD"])
+
+    # features = pd.get_dummies(features, columns=['DATE.OCC.Year'])
+    # features = pd.get_dummies(features, columns=['Status'])
+
     logger.info("Starting to plot the curve")
 
     X_train, X_test, y_train, y_test = train_test_split(
-        features, target, test_size=0.3, random_state=RANDOM_SEED)
+        features, target, test_size=0.3, random_state=RANDOM_SEED
+    )
 
     logger.info("Starting to plot the learning curves")
     train_sizes = np.linspace(0.01, 1.0, 10)  # Von 1% bis 100% des Datensatzes
@@ -186,12 +258,18 @@ if __name__ == "__main__":
         logger.info(f"{model_name}")
 
         if model_name == "Decision Tree":
-            plot_learning_curve(model, f'Learning Curve for {
-                model_name}', X_train, y_train, train_sizes=train_sizes)
+            plot_learning_curve_no_cv(
+                model, f"{model_name}", X_train, y_train, train_sizes=train_sizes
+            )
 
             # plot_learning_curve(model, f"Learning Curve for {model_name}", features, target, cv=10, train_sizes=train_sizes
             # )
 
         else:
-            plot_learning_curve_no_cv(model, f'Learning Curve for {
-                model_name}', X_train, y_train, train_sizes=train_sizes)
+            plot_learning_curve_no_cv(
+                model,
+                f"Learning Curve for {model_name}",
+                X_train,
+                y_train,
+                train_sizes=train_sizes,
+            )

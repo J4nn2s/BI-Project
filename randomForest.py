@@ -259,7 +259,6 @@ if __name__ == "__main__":
                'class_weight': None,
                  'criterion': 'gini'}
     Best score: 0.52086466478169
-    
     """
 
     """

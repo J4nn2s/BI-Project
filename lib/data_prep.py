@@ -8,15 +8,20 @@ import re
 
 
 def load_data() -> pd.DataFrame:
+
     current_dir = os.getcwd()
-    zip_path = os.path.join(current_dir, "Data/Crimes_2012-2016.csv.zip")
+
+    zip_path = os.path.join(
+        current_dir, "Data/Crimes_2012-2016.csv.zip.csv.zip")
 
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        # Annahme: Es gibt nur eine Datei in der ZIP
+
         csv_file_name = zip_ref.namelist()[0]
+
         with zip_ref.open(csv_file_name) as csv_file:
-            # BytesIO wird verwendet, um die Datei im Speicher zu halten
+
             data = BytesIO(csv_file.read())
+
             df = pd.read_csv(data, sep=",", parse_dates=[
                              "Date.Rptd", "DATE.OCC"])
 
@@ -29,40 +34,55 @@ def load_data() -> pd.DataFrame:
             return df
 
 
-def load_data_less_memory() -> pd.DataFrame:
-    dtype_dict = {
-        'DR.NO': 'int32',
-        'TIME.OCC': 'int32',
-        'AREA': 'int32',
-        'AREA.NAME': 'category',
-        'RD': 'int32',
-        'Crm.Cd': 'int32',
-        'CrmCd.Desc': 'category',
-        'Status': 'category',
-        'Status.Desc': 'category',
-        'LOCATION': 'category',
-        'Cross.Street': 'category',
-        'Location.1': 'category'
-    }
+def load_data_train() -> pd.DataFrame:
+
     current_dir = os.getcwd()
-    zip_path = os.path.join(current_dir, "Data/Crimes_2012-2016.csv.zip")
+
+    zip_path = os.path.join(current_dir, "Data/train_data.csv.zip")
 
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        # Annahme: Es gibt nur eine Datei in der ZIP
+
         csv_file_name = zip_ref.namelist()[0]
+
         with zip_ref.open(csv_file_name) as csv_file:
-            # BytesIO wird verwendet, um die Datei im Speicher zu halten
+
             data = BytesIO(csv_file.read())
-            df = pd.read_csv(data, dtype=dtype_dict, sep=",", parse_dates=[
+
+            df = pd.read_csv(data, sep=",", parse_dates=[
                              "Date.Rptd", "DATE.OCC"])
 
             df = df.drop_duplicates()
-            df = df[df["CrmCd.Desc"] != "nan"]
+
             df['CrmCd.Desc'] = df['CrmCd.Desc'].replace(
                 "nan", np.nan)
 
             df = df.dropna(subset=['CrmCd.Desc'])
+            return df
 
+
+def load_data_test() -> pd.DataFrame:
+
+    current_dir = os.getcwd()
+
+    zip_path = os.path.join(current_dir, "Data/test_data.csv.zip")
+
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+
+        csv_file_name = zip_ref.namelist()[0]
+
+        with zip_ref.open(csv_file_name) as csv_file:
+
+            data = BytesIO(csv_file.read())
+
+            df = pd.read_csv(data, sep=",", parse_dates=[
+                             "Date.Rptd", "DATE.OCC"])
+
+            df = df.drop_duplicates()
+
+            df['CrmCd.Desc'] = df['CrmCd.Desc'].replace(
+                "nan", np.nan)
+
+            df = df.dropna(subset=['CrmCd.Desc'])
             return df
 
 
@@ -169,24 +189,29 @@ def extract_street_category(address):
 
 if __name__ == "__main__":
 
-    import os
-
     print("Aktuelles Arbeitsverzeichnis:", os.getcwd())
+
     print("Inhalt des aktuellen Verzeichnisses:", os.listdir())
+
     print("Inhalt des übergeordneten Verzeichnisses:", os.listdir('..'))
 
-    data = load_data_less_memory()
+    data = load_data_train()
+
     data[['Latitude', 'Longitude']] = data['Location.1'].str.extract(
         r'\(([^,]+), ([^)]+)\)').astype(float)
 
     data = format_data_frame(data)
 
     print(data.head())
+
     print(data.info())
+
     print('Fehlende Werte ?')
+
     print(checking_missing_coordinates(data))
 
     format_data_frame(data)
+
     print('Fehlende Werte ?')
 
     print(checking_missing_coordinates(data))

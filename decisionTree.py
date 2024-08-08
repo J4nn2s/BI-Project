@@ -89,16 +89,17 @@ def save_decision_tree_plot(
     logger.info(f"Decision tree plot saved in {output_path}")
 
 
-RANDOM_SEED = random.randint(1, 10)  # können wir final setten zum Schluss
-# RANDOM_SEED = 42
+RANDOM_SEED = 42
 
 
 def bayesian_optimization(trial, X_train, y_train):
     max_depth = trial.suggest_int("max_depth", 10, 40)
     min_samples_split = trial.suggest_int("min_samples_split", 5, 200)
     min_samples_leaf = trial.suggest_int("min_samples_leaf", 5, 100)
-    max_features = trial.suggest_categorical("max_features", ["sqrt", "log2", None])
-    criterion = trial.suggest_categorical("criterion", ["gini", "entropy", "log_loss"])
+    max_features = trial.suggest_categorical(
+        "max_features", ["sqrt", "log2", None])
+    criterion = trial.suggest_categorical(
+        "criterion", ["gini", "entropy", "log_loss"])
 
     clf = DecisionTreeClassifier(
         max_depth=max_depth,
@@ -113,6 +114,15 @@ def bayesian_optimization(trial, X_train, y_train):
 
 
 if __name__ == "__main__":
+
+    testing: bool = False
+
+    start_testing: str = input(
+        "An den separaten Testdaten testen? -> Enter (Y/y) ")
+
+    if start_testing == "Y" or start_testing == "y":
+        testing: bool = True
+
     tuning: bool = False
 
     start: str = input("Mit Tuning? -> Enter (Y/y) ")
@@ -126,9 +136,10 @@ if __name__ == "__main__":
     if start_eval == "Y" or start_eval == "y":
         eval = True
 
-    data_sample = load_data()
+    data_sample = load_data_train()
 
     print(data_sample.head())
+
     print(data_sample.info())
 
     # data_sample = data_sample.sample(n=700000, random_state=RANDOM_SEED)
@@ -137,7 +148,8 @@ if __name__ == "__main__":
     data_sample = filter_outside_points(data_sample)
 
     logger.info(f"Grouping Categories")
-    data_sample["Crime Categorie"] = data_sample["CrmCd.Desc"].apply(categorize_crime)
+    data_sample["Crime Categorie"] = data_sample["CrmCd.Desc"].apply(
+        categorize_crime)
 
     # del data
     # gc.collect()
@@ -151,11 +163,11 @@ if __name__ == "__main__":
             "SEASON",
             "WEEKDAY",
             "DATE.OCC.Month",
-            "DATE.OCC.Year",
-            "Diff between OCC and Report",
-            #   'RD',
-            #   'Street Category',
-            "Status",
+            "RD",
+            "Street Category",
+            # "Status",
+            # "DATE.OCC.Year",
+            # "Diff between OCC and Report",
         ]
     ]
 
@@ -168,20 +180,16 @@ if __name__ == "__main__":
 
     features = pd.get_dummies(features, columns=["AREA"])
     features = pd.get_dummies(features, columns=["SEASON"])
-    features = pd.get_dummies(features, columns=["DATE.OCC.Year"])
     features = pd.get_dummies(features, columns=["WEEKDAY"])
     features = pd.get_dummies(features, columns=["DATE.OCC.Month"])
-    features = pd.get_dummies(features, columns=["Status"])
-    # features = pd.get_dummies(features, columns=['Street Category'])
-    # features = pd.get_dummies(features, columns=['RD'])
+    features = pd.get_dummies(features, columns=["Street Category"])
+    features = pd.get_dummies(features, columns=["RD"])
 
-    print(features.info())
+    # features = pd.get_dummies(features, columns=["Status"])
+    # features = pd.get_dummies(features, columns=["DATE.OCC.Year"])
 
     logger.info("---------------------------------------------")
     logger.info("Data-Preparation finished ...")
-    logger.info("Summary statistics after standardization:")
-    logger.info(features.describe())
-    logger.info(features.head())
 
     X_train, X_test, y_train, y_test = train_test_split(
         features, target, test_size=0.3, random_state=RANDOM_SEED
@@ -201,10 +209,8 @@ if __name__ == "__main__":
         logger.info(f"Best parameters found: {best_params}")
 
         # Train the best model
-        best_model = DecisionTreeClassifier(**best_params, random_state=RANDOM_SEED)
-
-    del data_sample
-    gc.collect()
+        best_model = DecisionTreeClassifier(
+            **best_params, random_state=RANDOM_SEED)
 
     logger.info("---------------------------------------------")
     logger.info("Training the model ...")
@@ -262,7 +268,8 @@ if __name__ == "__main__":
 
         # Durchführung der Cross-Validation
         # Verwendung von StratifiedKFold für Cross-Validation
-        skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=RANDOM_SEED)
+        skf = StratifiedKFold(n_splits=10, shuffle=True,
+                              random_state=RANDOM_SEED)
 
         # Durchführung der Cross-Validation
         cv_results = cross_validate(
@@ -307,15 +314,14 @@ if __name__ == "__main__":
         logger.info("CV Tree Results saved")
 
     if not eval:
+
         best_model.fit(X_train, y_train)
         feature_names = features.columns.tolist()
         class_names = target.unique().tolist()
 
         # max_depth kann optional angepasst werden
-        save_decision_tree_plot(best_model, feature_names, class_names, max_depth=5)
-
-        # del X_train, y_train, target
-        # gc.collect()
+        save_decision_tree_plot(
+            best_model, feature_names, class_names, max_depth=5)
 
         y_pred = best_model.predict(X_test)
         y_pred_prob_tree = best_model.predict_proba(X_test)
@@ -331,30 +337,31 @@ if __name__ == "__main__":
         top_5_features = feature_importances.head(5).index.tolist()
 
         # Erstellen des Partial Dependence Plots für die Top-5-Features
-        classes = best_model.classes_
+        # classes = best_model.classes_
 
-        fig, axes = plt.subplots(3, 4, figsize=(16, 9), constrained_layout=True)
-        for i, target_class in enumerate(classes):
-            row, col = divmod(i, 4)
-            PartialDependenceDisplay.from_estimator(
-                best_model,
-                X_test,
-                features=top_5_features,
-                target=target_class,
-                grid_resolution=50,
-                ax=axes[row, col],
-            )
-            axes[row, col].set_title(f"Class {target_class}")
+        # fig, axes = plt.subplots(3, 4, figsize=(
+        #     16, 9), constrained_layout=True)
+        # for i, target_class in enumerate(classes):
+        #     row, col = divmod(i, 4)
+        #     PartialDependenceDisplay.from_estimator(
+        #         best_model,
+        #         X_test,
+        #         features=top_5_features,
+        #         target=target_class,
+        #         grid_resolution=50,
+        #         ax=axes[row, col],
+        #     )
+        #     axes[row, col].set_title(f"Class {target_class}")
 
-        # Anpassen des Layouts
-        plt.suptitle(
-            "Partial Dependence Plots for Top 5 Features Across All Classes",
-            fontsize=16,
-        )
-        plt.subplots_adjust(top=0.95)  # Platz für den Titel schaffen
+        # # Anpassen des Layouts
+        # plt.suptitle(
+        #     "Partial Dependence Plots for Top 5 Features Across All Classes",
+        #     fontsize=16,
+        # )
+        # plt.subplots_adjust(top=0.95)  # Platz für den Titel schaffen
 
-        os.makedirs("Plots", exist_ok=True)
-        plt.savefig("Plots/Partial_Tree.png")
+        # os.makedirs("Plots", exist_ok=True)
+        # plt.savefig("Plots/Partial_Tree.png")
         logger.info("CV Tree Results saved")
 
         feature_importances_str = feature_importances.to_string()
