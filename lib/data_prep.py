@@ -12,7 +12,7 @@ def load_data() -> pd.DataFrame:
     current_dir = os.getcwd()
 
     zip_path = os.path.join(
-        current_dir, "Data/Crimes_2012-2016.csv.zip.csv.zip")
+        current_dir, "Data/Crimes_2012-2016.csv.zip")
 
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
 
@@ -38,7 +38,7 @@ def load_data_train() -> pd.DataFrame:
 
     current_dir = os.getcwd()
 
-    zip_path = os.path.join(current_dir, "Data/train_data.csv.zip")
+    zip_path = os.path.join(current_dir, "Data/train_data.zip")
 
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
 
@@ -99,6 +99,7 @@ def format_data_frame(data: pd.DataFrame) -> pd.DataFrame:
 
     data['Diff between OCC and Report'] = (
         data['Date.Rptd'] - data['DATE.OCC']).dt.days
+    data['day_of_month'] = data['DATE.OCC'].dt.day
 
     data["Street Category"] = data["LOCATION"].apply(
         extract_street_category)

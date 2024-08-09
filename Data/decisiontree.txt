@@ -117,3 +117,58 @@ Status_19                      0.000000
 Status_CC                      0.000000
 Status_TH                      0.000000
 Status_UNK                     0.000000
+
+
+
+
+
+
+
+
+
+
+
+
+AREA: 0.0013287403922143683
+SEASON: 0.007231677556350594
+WEEKDAY: 0.008344290855425235
+DATE.OCC.Month: 0.005586113853804397
+Street Category: 0.0018813851991367554
+RD: 0.00010150453734319263
+day_of_month: 0.003635070063926071
+TIME.OCC: 0.26113598210215516
+Latitude: 0.13569565283640167
+Longitude: 0.1407342175897967
+
+
+
+
+
+
+
+
+
+
+
+
+AREA nimmt 21 Spalten ein und verbraucht 2898985 Bytes Speicher.
+
+SEASON nimmt 4 Spalten ein und verbraucht 1199580 Bytes Speicher.
+
+WEEKDAY nimmt 7 Spalten ein und verbraucht 1499475 Bytes Speicher.
+
+DATE.OCC.Month nimmt 12 Spalten ein und verbraucht 1999300 Bytes Speicher.
+
+Street Category nimmt 26 Spalten ein und verbraucht 3398810 Bytes Speicher.
+
+RD nimmt 1168 Spalten ein und verbraucht 117558840 Bytes Speicher.
+
+day_of_month nimmt 31 Spalten ein und verbraucht 3898635 Bytes Speicher.
+
+TIME.OCC nimmt 1 Spalten ein und verbraucht 1599440 Bytes Speicher.
+
+Latitude nimmt 1 Spalten ein und verbraucht 1199580 Bytes Speicher.
+
+Longitude nimmt 1 Spalten ein und verbraucht 1199580 Bytes Speicher.
+
+/home/vscode/.local/lib/python3.12/site-packages/sklearn/model_selection/_split.py:776: UserWarning: The least populated class in y has only 1 members,
