@@ -151,24 +151,24 @@ Longitude: 0.1407342175897967
 
 
 
-AREA nimmt 21 Spalten ein und verbraucht 2898985 Bytes Speicher.
+AREA nimmt 21 Spalten ein und verbraucht 2.898.985 Bytes Speicher.
 
-SEASON nimmt 4 Spalten ein und verbraucht 1199580 Bytes Speicher.
+SEASON nimmt 4 Spalten ein und verbraucht 1.199.580 Bytes Speicher.
 
-WEEKDAY nimmt 7 Spalten ein und verbraucht 1499475 Bytes Speicher.
+WEEKDAY nimmt 7 Spalten ein und verbraucht 1.499.475 Bytes Speicher.
 
-DATE.OCC.Month nimmt 12 Spalten ein und verbraucht 1999300 Bytes Speicher.
+DATE.OCC.Month nimmt 12 Spalten ein und verbraucht 1.999.300 Bytes Speicher.
 
-Street Category nimmt 26 Spalten ein und verbraucht 3398810 Bytes Speicher.
+Street Category nimmt 26 Spalten ein und verbraucht 3.398.810 Bytes Speicher.
 
-RD nimmt 1168 Spalten ein und verbraucht 117558840 Bytes Speicher.
+RD nimmt 1168 Spalten ein und verbraucht 117.558.840 Bytes Speicher.
 
-day_of_month nimmt 31 Spalten ein und verbraucht 3898635 Bytes Speicher.
+day_of_month nimmt 31 Spalten ein und verbraucht 3.898.635 Bytes Speicher.
 
-TIME.OCC nimmt 1 Spalten ein und verbraucht 1599440 Bytes Speicher.
+TIME.OCC nimmt 1 Spalten ein und verbraucht 1.599.440 Bytes Speicher.
 
-Latitude nimmt 1 Spalten ein und verbraucht 1199580 Bytes Speicher.
+Latitude nimmt 1 Spalten ein und verbraucht 1.199.580 Bytes Speicher.
 
-Longitude nimmt 1 Spalten ein und verbraucht 1199580 Bytes Speicher.
+Longitude nimmt 1 Spalten ein und verbraucht 1.199.580 Bytes Speicher.
 
 /home/vscode/.local/lib/python3.12/site-packages/sklearn/model_selection/_split.py:776: UserWarning: The least populated class in y has only 1 members,

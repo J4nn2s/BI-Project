@@ -64,7 +64,7 @@ def load_data_test() -> pd.DataFrame:
 
     current_dir = os.getcwd()
 
-    zip_path = os.path.join(current_dir, "Data/test_data.csv.zip")
+    zip_path = os.path.join(current_dir, "Data/test_data.zip")
 
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
 

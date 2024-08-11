@@ -96,8 +96,10 @@ def bayesian_optimization(trial, X_train, y_train):
     max_depth = trial.suggest_int("max_depth", 10, 40)
     min_samples_split = trial.suggest_int("min_samples_split", 5, 200)
     min_samples_leaf = trial.suggest_int("min_samples_leaf", 5, 100)
-    max_features = trial.suggest_categorical("max_features", ["sqrt", "log2", None])
-    criterion = trial.suggest_categorical("criterion", ["gini", "entropy", "log_loss"])
+    max_features = trial.suggest_categorical(
+        "max_features", ["sqrt", "log2", None])
+    criterion = trial.suggest_categorical(
+        "criterion", ["gini", "entropy", "log_loss"])
 
     clf = DecisionTreeClassifier(
         max_depth=max_depth,
@@ -112,13 +114,6 @@ def bayesian_optimization(trial, X_train, y_train):
 
 
 if __name__ == "__main__":
-
-    testing: bool = False
-
-    start_testing: str = input("An den separaten Testdaten testen? -> Enter (Y/y) ")
-
-    if start_testing == "Y" or start_testing == "y":
-        testing: bool = True
 
     tuning: bool = False
 
@@ -145,7 +140,8 @@ if __name__ == "__main__":
     data_sample = filter_outside_points(data_sample)
 
     logger.info(f"Grouping Categories")
-    data_sample["Crime Categorie"] = data_sample["CrmCd.Desc"].apply(categorize_crime)
+    data_sample["Crime Categorie"] = data_sample["CrmCd.Desc"].apply(
+        categorize_crime)
 
     # del data
     # gc.collect()
@@ -159,8 +155,8 @@ if __name__ == "__main__":
             "SEASON",
             "WEEKDAY",
             "DATE.OCC.Month",
-            "RD",
-            "Street Category",
+            # "RD",
+            # "Street Category",
             # "Status",
             # "DATE.OCC.Year",
             # "Diff between OCC and Report",
@@ -178,8 +174,8 @@ if __name__ == "__main__":
     features = pd.get_dummies(features, columns=["SEASON"])
     features = pd.get_dummies(features, columns=["WEEKDAY"])
     features = pd.get_dummies(features, columns=["DATE.OCC.Month"])
-    features = pd.get_dummies(features, columns=["Street Category"])
-    features = pd.get_dummies(features, columns=["RD"])
+    # features = pd.get_dummies(features, columns=["Street Category"])
+    # features = pd.get_dummies(features, columns=["RD"])
 
     # features = pd.get_dummies(features, columns=["Status"])
     # features = pd.get_dummies(features, columns=["DATE.OCC.Year"])
@@ -205,7 +201,8 @@ if __name__ == "__main__":
         logger.info(f"Best parameters found: {best_params}")
 
         # Train the best model
-        best_model = DecisionTreeClassifier(**best_params, random_state=RANDOM_SEED)
+        best_model = DecisionTreeClassifier(
+            **best_params, random_state=RANDOM_SEED)
 
     logger.info("---------------------------------------------")
     logger.info("Training the model ...")
@@ -263,7 +260,8 @@ if __name__ == "__main__":
 
         # Durchführung der Cross-Validation
         # Verwendung von StratifiedKFold für Cross-Validation
-        skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=RANDOM_SEED)
+        skf = StratifiedKFold(n_splits=10, shuffle=True,
+                              random_state=RANDOM_SEED)
 
         # Durchführung der Cross-Validation
         cv_results = cross_validate(
@@ -313,8 +311,7 @@ if __name__ == "__main__":
         feature_names = features.columns.tolist()
         class_names = target.unique().tolist()
 
-        # max_depth kann optional angepasst werden
-        save_decision_tree_plot(best_model, feature_names, class_names, max_depth=5)
+        # save_decision_tree_plot(best_model, feature_names, class_names, max_depth=5)
 
         y_pred = best_model.predict(X_test)
         y_pred_prob_tree = best_model.predict_proba(X_test)
