@@ -88,3 +88,39 @@ Status_19                      0.000000
 Status_CC                      0.000000
 Status_TH                      0.000000
 Status_UNK                     0.000000
+
+
+cv Random Forest with time and space vars only
+
+
+Accuracy - Mean: 0.4305,  Std: 0.0005
+Precision - Mean: 0.3691, Std: 0.0233
+Recall - Mean: 0.4305,    Std: 0.0005
+F1 - Mean: 0.3581,        Std: 0.0009
+Log_loss - Mean: 1.4817,  Std: 0.0008
+
+
+
+
+
+
+
+
+Precision etc an den Testdaten
+
+      Betrugsdelikte       0.42      0.30      0.35     21417
+   Cyberkriminalität       0.00      0.00      0.00       183
+    Eigentumsdelikte       0.44      0.78      0.56    129291
+    Gewaltverbrechen       0.42      0.40      0.41     86985
+  Jugendkriminalität       0.00      0.00      0.00        22
+  Kindesmisshandlung       0.00      0.00      0.00      4013
+Ordnungswidrigkeiten       0.00      0.00      0.00     38147
+       Sexualdelikte       0.00      0.00      0.00      7730
+           Sonstiges       0.00      0.00      0.00      2883
+Tierschutzverbrechen       0.00      0.00      0.00         4
+  Umweltkriminalität       0.00      0.00      0.00       189
+     Verkehrsdelikte       0.37      0.07      0.12     49876
+
+            accuracy                           0.43    340740
+           macro avg       0.14      0.13      0.12    340740
+        weighted avg       0.35      0.43      0.36    340740

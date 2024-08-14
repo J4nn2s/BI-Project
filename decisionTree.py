@@ -143,9 +143,6 @@ if __name__ == "__main__":
     data_sample["Crime Categorie"] = data_sample["CrmCd.Desc"].apply(
         categorize_crime)
 
-    # del data
-    # gc.collect()
-
     features: pd.DataFrame = data_sample[
         [
             "AREA",
@@ -155,6 +152,7 @@ if __name__ == "__main__":
             "SEASON",
             "WEEKDAY",
             "DATE.OCC.Month",
+            "day_of_month"
             # "RD",
             # "Street Category",
             # "Status",
@@ -242,9 +240,8 @@ if __name__ == "__main__":
     'max_features': None,
     'criterion': 'entropy'}
     }
-
-
     """
+
     ############################################################
 
     # Modell trainieren

@@ -27,10 +27,6 @@ from sklearn.model_selection import (
     StratifiedKFold,
     cross_validate,
 )
-from lib.tune_random_forest import (
-    grid_tune_hyperparameters,
-    randomize_tune_hyperparameters,
-)
 import gc
 import optuna
 import psutil
@@ -47,7 +43,8 @@ def print_memory_usage():
     process = psutil.Process()
     mem_info = process.memory_info()
     print(
-        f"RSS: {mem_info.rss / (1024 * 1024)          :.2f} MB, VMS: {mem_info.vms / (1024 * 1024):.2f} MB"
+        f"RSS: {mem_info.rss /
+                (1024 * 1024):.2f} MB, VMS: {mem_info.vms / (1024 * 1024):.2f} MB"
     )
 
 
@@ -63,15 +60,18 @@ def bayesian_optimization_forest(trial, X_train, y_train):
 
     min_samples_leaf = trial.suggest_int("min_samples_leaf", 5, 100)
 
-    max_features = trial.suggest_categorical("max_features", ["sqrt", 0.7, None])
+    max_features = trial.suggest_categorical(
+        "max_features", ["sqrt", 0.7, None])
 
     bootstrap = True
 
     oob_score = True
 
-    class_weight = trial.suggest_categorical("class_weight", [None, "balanced"])
+    class_weight = trial.suggest_categorical(
+        "class_weight", [None, "balanced"])
 
-    criterion = trial.suggest_categorical("criterion", ["gini", "entropy", "log_loss"])
+    criterion = trial.suggest_categorical(
+        "criterion", ["gini", "entropy", "log_loss"])
 
     clf = RandomForestClassifier(
         n_estimators=n_estimators,
@@ -91,7 +91,7 @@ def bayesian_optimization_forest(trial, X_train, y_train):
     gc.collect()
     print_memory_usage()
 
-    return cross_val_score(clf, X_train, y_train, cv=2, n_jobs=4).mean()
+    return cross_val_score(clf, X_train, y_train, cv=5, n_jobs=4).mean()
 
 
 # RSS: 386.99 MB, VMS: 1333.82 MB ohne gc.collect und n = 200000
@@ -152,7 +152,7 @@ if __name__ == "__main__":
     if start_eval == "Y" or start_eval == "y":
         eval = True
 
-    data_sample = load_data()
+    data_sample = load_data_train()
 
     print(data_sample.head())
 
@@ -162,7 +162,8 @@ if __name__ == "__main__":
     data_sample = format_data_frame(data_sample)
     data_sample = filter_outside_points(data_sample)
     logger.info(f"Grouping Categories")
-    data_sample["Crime Categorie"] = data_sample["CrmCd.Desc"].apply(categorize_crime)
+    data_sample["Crime Categorie"] = data_sample["CrmCd.Desc"].apply(
+        categorize_crime)
 
     # del data
     # gc.collect()
@@ -175,11 +176,12 @@ if __name__ == "__main__":
             "Longitude",
             "SEASON",
             "WEEKDAY",
-            "DATE.OCC.Year",
             "DATE.OCC.Month",
+            "day_of_month"
             #   'Diff between OCC and Report',
             #   'Status',
-            #   'RD'
+            #   'RD',
+            # "DATE.OCC.Year",
         ]
     ]
 
@@ -192,11 +194,12 @@ if __name__ == "__main__":
 
     features = pd.get_dummies(features, columns=["AREA"])
     features = pd.get_dummies(features, columns=["SEASON"])
-    features = pd.get_dummies(features, columns=["DATE.OCC.Year"])
     features = pd.get_dummies(features, columns=["DATE.OCC.Month"])
     features = pd.get_dummies(features, columns=["WEEKDAY"])
+    features = pd.get_dummies(features, columns=["day_of_month"])
     # features = pd.get_dummies(features, columns=['Status'])
     # features = pd.get_dummies(features, columns=['RD'])
+    # features = pd.get_dummies(features, columns=["DATE.OCC.Year"])
 
     logger.info("---------------------------------------------")
     logger.info("Data-Preparation finished ...")
@@ -216,7 +219,8 @@ if __name__ == "__main__":
         # Use Optuna to tune the hyperparameters
         study = optuna.create_study(direction="maximize")
         study.optimize(
-            lambda trial: bayesian_optimization_forest(trial, X_train, y_train),
+            lambda trial: bayesian_optimization_forest(
+                trial, X_train, y_train),
             n_trials=300,
             n_jobs=-1,
             show_progress_bar=True,
@@ -287,7 +291,8 @@ if __name__ == "__main__":
 
         # Durchführung der Cross-Validation
         # Verwendung von StratifiedKFold für Cross-Validation
-        skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=RANDOM_SEED)
+        skf = StratifiedKFold(n_splits=5, shuffle=True,
+                              random_state=RANDOM_SEED)
 
         # Durchführung der Cross-Validation
         cv_results = cross_validate(

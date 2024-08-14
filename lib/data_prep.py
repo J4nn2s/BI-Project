@@ -139,7 +139,6 @@ def get_season(month: int) -> str:
     else:
         return 'Herbst'
 
-
 # def categorize_time(hour: int) -> str:
 #     # Zeit als vierstellige Zeichenkette formatieren
 #     hour_str = str(hour).zfill(4)

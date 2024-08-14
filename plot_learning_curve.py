@@ -40,27 +40,27 @@ import seaborn as sns
 RANDOM_SEED = 42
 
 models = {
-    "Decision Tree": DecisionTreeClassifier(
-        max_depth=15,
-        # min_samples_split=20,
-        # min_samples_leaf=9,
-        # max_features=None,
-        # criterion="gini",
-        random_state=RANDOM_SEED
-    ),
-    #     "Random Forest": RandomForestClassifier(n_estimators=50,
-    #                                             min_samples_leaf=35,
-    #                                             min_samples_split=199,
-    #                                             max_features=None,
-    #                                             max_depth=39,
-    #                                             max_leaf_nodes=230,
-    #                                             random_state=RANDOM_SEED,
-    #                                             verbose=2,
-    #                                             bootstrap=True,
-    #                                             oob_score=True,
-    #                                             class_weight=None,
-    #                                             criterion="gini",
-    #                                             n_jobs=4)
+    # "Decision Tree": DecisionTreeClassifier(
+    #     max_depth=15,
+    #     min_samples_split=20,
+    #     min_samples_leaf=9,
+    #     max_features=None,
+    #     criterion="gini",
+    #     random_state=RANDOM_SEED
+    # ),
+    "Random Forest": RandomForestClassifier(n_estimators=50,
+                                            min_samples_leaf=35,
+                                            min_samples_split=199,
+                                            max_features=None,
+                                            max_depth=39,
+                                            max_leaf_nodes=230,
+                                            random_state=RANDOM_SEED,
+                                            verbose=2,
+                                            bootstrap=True,
+                                            oob_score=True,
+                                            class_weight=None,
+                                            criterion="gini",
+                                            n_jobs=4)
 }
 
 # Best parameters: {
@@ -191,7 +191,7 @@ def plot_learning_curve(
 
 
 if __name__ == "__main__":
-    data_sample = load_data()
+    data_sample = load_data_train()
 
     print(data_sample.head())
     print(data_sample.info())
@@ -217,11 +217,11 @@ if __name__ == "__main__":
             "SEASON",
             "WEEKDAY",
             "DATE.OCC.Month",
-            "RD",
-            "Street Category",
-            #   'Status',
-            #   'DATE.OCC.Year',
+            "day_of_month"
             #   'Diff between OCC and Report',
+            #   'Status',
+            #   'RD',
+            # "DATE.OCC.Year",
         ]
     ]
 
@@ -234,14 +234,12 @@ if __name__ == "__main__":
 
     features = pd.get_dummies(features, columns=["AREA"])
     features = pd.get_dummies(features, columns=["SEASON"])
-    features = pd.get_dummies(features, columns=["WEEKDAY"])
     features = pd.get_dummies(features, columns=["DATE.OCC.Month"])
-    features = pd.get_dummies(features, columns=["Street Category"])
-    features = pd.get_dummies(features, columns=["RD"])
-
-    # features = pd.get_dummies(features, columns=['DATE.OCC.Year'])
+    features = pd.get_dummies(features, columns=["WEEKDAY"])
+    features = pd.get_dummies(features, columns=["day_of_month"])
     # features = pd.get_dummies(features, columns=['Status'])
-
+    # features = pd.get_dummies(features, columns=['RD'])
+    # features = pd.get_dummies(features, columns=["DATE.OCC.Year"])
     logger.info("Starting to plot the curve")
 
     X_train, X_test, y_train, y_test = train_test_split(
@@ -257,19 +255,13 @@ if __name__ == "__main__":
         logger.info(f"Plotting {model_name}")
         logger.info(f"{model_name}")
 
-        if model_name == "Decision Tree":
-            plot_learning_curve_no_cv(
-                model, f"{model_name}", X_train, y_train, train_sizes=train_sizes
-            )
+        plot_learning_curve_no_cv(
+            model,
+            f"{model_name}",
+            X_train,
+            y_train,
+            train_sizes=train_sizes
+        )
 
-            # plot_learning_curve(model, f"Learning Curve for {model_name}", features, target, cv=10, train_sizes=train_sizes
-            # )
-
-        else:
-            plot_learning_curve_no_cv(
-                model,
-                f"Learning Curve for {model_name}",
-                X_train,
-                y_train,
-                train_sizes=train_sizes,
-            )
+        # plot_learning_curve(model, f"Learning Curve for {model_name}", features, target, cv=10, train_sizes=train_sizes
+        # )

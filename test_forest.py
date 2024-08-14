@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     classification_report,
     make_scorer,
@@ -30,18 +30,23 @@ if __name__ == "__main__":
 
     logger.info(f"Grouping Categories")
 
-    data_train["Crime Categorie"] = data_train["CrmCd.Desc"].apply(
-        categorize_crime)
-    data_test["Crime Categorie"] = data_test["CrmCd.Desc"].apply(
-        categorize_crime)
+    data_train["Crime Categorie"] = data_train["CrmCd.Desc"].apply(categorize_crime)
+    data_test["Crime Categorie"] = data_test["CrmCd.Desc"].apply(categorize_crime)
 
-    model: DecisionTreeClassifier = DecisionTreeClassifier(
-        max_depth=14,
-        min_samples_split=38,
-        min_samples_leaf=72,
+    model: RandomForestClassifier = RandomForestClassifier(
+        n_estimators=100,
+        min_samples_leaf=15,
+        min_samples_split=45,
         max_features=None,
-        criterion="gini",
+        max_depth=49,  # mein PC schmiert sonst ab
+        max_leaf_nodes=300,
         random_state=RANDOM_SEED,
+        verbose=2,
+        bootstrap=True,
+        oob_score=True,
+        class_weight=None,
+        criterion="gini",
+        n_jobs=-1,
     )
 
     features_train: pd.DataFrame = data_train[
@@ -53,8 +58,7 @@ if __name__ == "__main__":
             "SEASON",
             "WEEKDAY",
             "DATE.OCC.Month",
-            "day_of_month"
-
+            "day_of_month",
             # "Status" ,
             # "DATE.OCC.Year" ,
             # "Diff between OCC and Report" ,
@@ -69,7 +73,7 @@ if __name__ == "__main__":
             "SEASON",
             "WEEKDAY",
             "DATE.OCC.Month",
-            "day_of_month"
+            "day_of_month",
             # "Status" ,
             # "DATE.OCC.Year" ,
             # "Diff between OCC and Report" ,
@@ -81,9 +85,11 @@ if __name__ == "__main__":
 
     scaler = StandardScaler()
     scaled_features_train = scaler.fit_transform(
-        features_train[["Latitude", "Longitude"]])
+        features_train[["Latitude", "Longitude"]]
+    )
     scaled_features_test = scaler.fit_transform(
-        features_test[["Latitude", "Longitude"]])
+        features_test[["Latitude", "Longitude"]]
+    )
 
     features_train.loc[:, ["Latitude", "Longitude"]] = scaled_features_train
     features_test.loc[:, ["Latitude", "Longitude"]] = scaled_features_test
@@ -128,4 +134,4 @@ if __name__ == "__main__":
     accuracy = accuracy_score(target_test, y_pred)
     logger.success(f"Accuracy: {accuracy:.4f}")
     log_loss_tree = log_loss(target_test, y_pred_prob_tree)
-    logger.success(f"Decision Tree Log Loss: {log_loss_tree}")
+    logger.success(f"Random Forest Log Loss: {log_loss_tree}")
